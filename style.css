@@ -199,3 +199,38 @@ body{
   .main-title{font-size:28px}
   .summary-price{font-size:30px}
     }
+button i,
+button svg,
+.icon-button i,
+.icon-button svg,
+.nav-item i,
+.nav-item svg,
+.nav-center-btn i,
+.nav-center-btn svg,
+.settings-btn i,
+.settings-btn svg,
+.action-btn i,
+.action-btn svg,
+.voice-card-btn i,
+.voice-card-btn svg {
+  pointer-events: none;
+}
+
+.icon-button,
+.nav-item,
+.nav-center-btn,
+.settings-btn,
+.action-btn,
+.voice-card-btn,
+.primary-btn,
+.secondary-btn {
+  touch-action: manipulation;
+}
+
+.bottom-nav {
+  z-index: 9999;
+}
+
+.drawer {
+  z-index: 10000;
+}
