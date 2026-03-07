@@ -1,76 +1,215 @@
-<!DOCTYPE html><html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Muhasebecin</title><style>
+<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Muhasebecin</title><style>
+
 body{
-font-family: Arial;
-background:#111;
+font-family:Arial;
+background:#0f0f0f;
 color:white;
-text-align:center;
+margin:0;
 padding:20px;
 }
 
-button{
-padding:12px;
-margin:10px;
-font-size:16px;
-border:none;
-border-radius:8px;
-background:#00b894;
-color:white;
+h1{
+text-align:center;
+}
+
+.container{
+max-width:600px;
+margin:auto;
 }
 
 input{
 padding:10px;
 margin:5px;
-border-radius:6px;
 border:none;
+border-radius:8px;
+font-size:16px;
+}
+
+button{
+padding:10px;
+border:none;
+border-radius:8px;
+margin:5px;
+cursor:pointer;
+}
+
+.ekle{
+background:#00b894;
+color:white;
+}
+
+.dus{
+background:#e17055;
+color:white;
+}
+
+.sil{
+background:#636e72;
+color:white;
 }
 
 .card{
-background:#222;
+background:#1e1e1e;
 padding:15px;
-margin:10px;
+margin-top:10px;
 border-radius:10px;
 }
-</style></head><body><h1>Muhasebecin</h1><input id="isim" placeholder="Kişi adı">
-<input id="borc" type="number" placeholder="Tutar"><br><button onclick="ekle()">Borç Ekle</button>
 
-<h2>Kayıtlar</h2><div id="liste"></div><script>
+.toplam{
+font-size:20px;
+margin:10px 0;
+color:#00cec9;
+}
 
-let kisiler=[];
+.hareket{
+font-size:14px;
+color:#aaa;
+}
 
-function ekle(){
+</style></head><body><div class="container"><h1>Muhasebecin</h1><div class="toplam">
+Toplam Borç: <span id="toplam">0</span> TL
+</div><input id="isim" placeholder="Kişi adı">
+<input id="tutar" type="number" placeholder="Tutar"><br><button class="ekle" onclick="borcEkle()">Borç Ekle</button>
+<button onclick="borcDus()">Borç Düş</button>
 
-let isim=document.getElementById("isim").value;
-let borc=document.getElementById("borc").value;
+<br><br>
 
-if(!isim || !borc)return;
+<input id="arama" placeholder="Kişi ara" oninput="listele()"><div id="liste"></div></div><script>
 
-kisiler.push({isim,borc});
+let veriler = JSON.parse(localStorage.getItem("muhasebe")) || [];
 
-goster();
+function kaydet(){
+localStorage.setItem("muhasebe",JSON.stringify(veriler));
+}
+
+function kisiBul(isim){
+return veriler.find(k=>k.isim.toLowerCase()==isim.toLowerCase());
+}
+
+function borcEkle(){
+
+let isim=document.getElementById("isim").value.trim();
+let tutar=Number(document.getElementById("tutar").value);
+
+if(!isim || !tutar)return;
+
+let kisi=kisiBul(isim);
+
+if(!kisi){
+
+kisi={
+isim:isim,
+bakiye:0,
+hareketler:[]
+};
+
+veriler.push(kisi);
 
 }
 
-function goster(){
+kisi.bakiye+=tutar;
+
+kisi.hareketler.push({
+tip:"ekle",
+tutar:tutar,
+tarih:new Date().toLocaleString()
+});
+
+kaydet();
+
+listele();
+
+}
+
+function borcDus(){
+
+let isim=document.getElementById("isim").value.trim();
+let tutar=Number(document.getElementById("tutar").value);
+
+if(!isim || !tutar)return;
+
+let kisi=kisiBul(isim);
+
+if(!kisi)return;
+
+kisi.bakiye-=tutar;
+
+kisi.hareketler.push({
+tip:"dus",
+tutar:tutar,
+tarih:new Date().toLocaleString()
+});
+
+kaydet();
+
+listele();
+
+}
+
+function kisiSil(index){
+
+veriler.splice(index,1);
+
+kaydet();
+
+listele();
+
+}
+
+function listele(){
 
 let liste=document.getElementById("liste");
 
+let arama=document.getElementById("arama").value.toLowerCase();
+
 liste.innerHTML="";
 
-kisiler.forEach(k=>{
+let toplam=0;
 
-liste.innerHTML+=`
-<div class="card">
-${k.isim} : ${k.borc} TL
+veriler.forEach((k,i)=>{
+
+if(!k.isim.toLowerCase().includes(arama))return;
+
+toplam+=k.bakiye;
+
+let hareketHTML="";
+
+k.hareketler.slice().reverse().forEach(h=>{
+
+hareketHTML+=`
+<div class="hareket">
+${h.tip=="ekle" ? "+" : "-"} ${h.tutar} TL
+(${h.tarih})
 </div>
 `;
 
 });
 
+liste.innerHTML+=`
+<div class="card">
+
+<b>${k.isim}</b><br>
+
+Borç: ${k.bakiye} TL
+
+<br><br>
+
+<button class="sil" onclick="kisiSil(${i})">Sil</button>
+
+<br><br>
+
+${hareketHTML}
+
+</div>
+`;
+
+});
+
+document.getElementById("toplam").innerText=toplam;
+
 }
 
-</script></body>
-</html>
+listele();
+
+</script></body></html>
