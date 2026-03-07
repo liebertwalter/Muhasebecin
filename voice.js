@@ -1,63 +1,102 @@
-/* SESLİ KOMUT SİSTEMİ */
+let recognitionInstance = null;
 
-let recognition;
+function sesliKomutBaslat() {
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
 
-/* SESLİ KOMUT BAŞLAT */
+  if (!SpeechRecognition) {
+    alert("Bu tarayıcı sesli komutu desteklemiyor. Telefonda Chrome ile dene.");
+    return;
+  }
 
-function sesliKomutBaslat(){
+  recognitionInstance = new SpeechRecognition();
+  recognitionInstance.lang = "tr-TR";
+  recognitionInstance.continuous = false;
+  recognitionInstance.interimResults = false;
+  recognitionInstance.maxAlternatives = 1;
 
-if(!('webkitSpeechRecognition' in window)){
+  recognitionInstance.onstart = function () {
+    alert("Dinliyorum... Komut söyle.");
+  };
 
-alert("Tarayıcı ses tanımayı desteklemiyor");
+  recognitionInstance.onerror = function (event) {
+    alert("Sesli komut hatası: " + event.error);
+  };
 
-return;
+  recognitionInstance.onresult = function (event) {
+    const komut = event.results[0][0].transcript.toLowerCase().trim();
+    komutIsle(komut);
+  };
 
+  recognitionInstance.start();
 }
 
-recognition = new webkitSpeechRecognition();
+function komutIsle(komut) {
+  const temizKomut = komut
+    .replaceAll("’", "'")
+    .replaceAll(" tl", "")
+    .replaceAll(" lira", "")
+    .replaceAll(" türk lirası", "")
+    .trim();
 
-recognition.lang = "tr-TR";
+  const tutarEslesme = temizKomut.match(/\d+/);
+  if (!tutarEslesme) {
+    alert("Tutar bulunamadı. Örnek: Ahmet 100 ekle");
+    return;
+  }
 
-recognition.continuous = false;
+  const tutar = Number(tutarEslesme[0]);
 
-recognition.interimResults = false;
+  let islemTipi = "ekle";
+  if (
+    temizKomut.includes("düş") ||
+    temizKomut.includes("dus") ||
+    temizKomut.includes("çıkar") ||
+    temizKomut.includes("cikar") ||
+    temizKomut.includes("azalt")
+  ) {
+    islemTipi = "dus";
+  }
 
-recognition.start();
+  let isim = temizKomut
+    .replace(/\d+/g, "")
+    .replace("borcuna", "")
+    .replace("borcundan", "")
+    .replace("borçuna", "")
+    .replace("borçundan", "")
+    .replace("ekle", "")
+    .replace("çıkar", "")
+    .replace("cikar", "")
+    .replace("düş", "")
+    .replace("dus", "")
+    .replace("azalt", "")
+    .replace(/['’]?[iaeuü]$/i, "")
+    .trim();
 
-recognition.onresult = function(event){
+  if (!isim) {
+    alert("Kişi adı bulunamadı. Örnek: Ahmet 100 ekle");
+    return;
+  }
 
-let komut = event.results[0][0].transcript.toLowerCase();
+  isim = isim
+    .split(" ")
+    .filter(Boolean)
+    .map(kelime => kelime.charAt(0).toUpperCase() + kelime.slice(1))
+    .join(" ");
 
-komutIsle(komut);
+  if (islemTipi === "dus") {
+    borcDusDB(isim, tutar);
+    alert(`${isim} için ${tutar} TL düşüldü.`);
+  } else {
+    borcEkleDB(isim, tutar);
+    alert(`${isim} için ${tutar} TL eklendi.`);
+  }
 
-};
+  if (typeof listeyiGuncelle === "function") {
+    listeyiGuncelle();
+  }
 
-}
-
-/* KOMUT ANALİZİ */
-
-function komutIsle(komut){
-
-let sayi = komut.match(/\d+/);
-
-if(!sayi) return;
-
-let tutar = Number(sayi[0]);
-
-let kelimeler = komut.split(" ");
-
-let isim = kelimeler[0];
-
-if(komut.includes("düş") || komut.includes("çıkar")){
-
-borcDusDB(isim, tutar);
-
-}else{
-
-borcEkleDB(isim, tutar);
-
-}
-
-listeyiGuncelle();
-
+  if (typeof grafikCiz === "function") {
+    grafikCiz();
+  }
 }
