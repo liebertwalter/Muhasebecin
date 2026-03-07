@@ -4,251 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Muhasebecin</title>
+  <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
-    :root{
-      --bg-1:#050c24;
-      --bg-2:#09122f;
-      --panel-1:rgba(72,88,152,0.34);
-      --panel-2:rgba(34,45,88,0.34);
-      --line:rgba(255,255,255,0.12);
-      --text:#f7f9ff;
-      --muted:#b6c2ea;
-      --blue:#2f7cff;
-      --blue-2:#1458f4;
-      --green:#35c36e;
-      --orange:#ff9f3f;
-      --red:#ff5a67;
-      --shadow:0 18px 40px rgba(0,0,0,0.35);
-      --radius-xl:26px;
-    }
-    body.light{
-      --bg-1:#edf3ff;
-      --bg-2:#f9fbff;
-      --panel-1:rgba(255,255,255,0.92);
-      --panel-2:rgba(241,245,255,0.96);
-      --line:rgba(15,23,42,0.08);
-      --text:#0f172a;
-      --muted:#475569;
-      --shadow:0 18px 40px rgba(15,23,42,0.12);
-    }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;padding:0;min-height:100%}
-    body{
-      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Arial,sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(circle at top center, rgba(48,93,255,.28), transparent 28%),
-        radial-gradient(circle at left center, rgba(38,83,220,.16), transparent 30%),
-        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
-    }
-    .hidden{display:none !important}
-    .bg-blur{
-      position:fixed;width:180px;height:180px;filter:blur(70px);border-radius:50%;z-index:0;opacity:.5
-    }
-    .bg-blur-1{top:60px;left:-40px;background:#1d4ed8}
-    .bg-blur-2{right:-40px;bottom:120px;background:#2563eb}
-    .overlay{
-      position:fixed;inset:0;z-index:99999;background:rgba(2,6,23,.82);
-      backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:18px
-    }
-    .auth-card{
-      width:min(100%,420px);
-      background:linear-gradient(180deg, rgba(72,88,152,.45), rgba(34,45,88,.45));
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:28px;padding:20px;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.45)
-    }
-    .auth-logo{
-      width:70px;height:70px;margin:0 auto 12px;border-radius:22px;display:flex;align-items:center;justify-content:center;
-      background:linear-gradient(135deg,#3b82f6,#1d4ed8);font-size:32px;font-weight:800
-    }
-    .auth-title{text-align:center;font-size:38px;font-weight:900}
-    .auth-subtitle{text-align:center;color:#c7d2fe;margin:8px 0 18px}
-    .auth-tabs{display:flex;gap:8px;margin-bottom:12px}
-    .auth-tab{
-      flex:1;border:none;border-radius:14px;padding:12px;font-size:16px;font-weight:800;background:rgba(255,255,255,.08);color:#fff
-    }
-    .auth-tab.active{background:#2563eb}
-    .auth-message{margin-top:12px;font-size:13px;color:#dbeafe;text-align:center;min-height:18px}
-    .app{
-      position:relative;z-index:2;width:min(100%,560px);margin:0 auto;min-height:100vh;padding:22px 14px 140px
-    }
-    .glass-card{
-      background:linear-gradient(180deg, var(--panel-1), var(--panel-2));
-      border:1px solid var(--line);border-radius:var(--radius-xl);box-shadow:var(--shadow);
-      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)
-    }
-    .topbar{
-      display:grid;grid-template-columns:64px 1fr 64px;align-items:center;gap:10px;margin-bottom:18px
-    }
-    .top-title{text-align:center}
-    .mini-title{font-size:13px;color:#9cb3ef;font-weight:700}
-    .main-title{font-size:30px;font-weight:900;letter-spacing:-.8px}
-    .sub-title{margin-top:6px;font-size:11px;color:var(--muted)}
-    .avatar{
-      width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#fff;
-      background:linear-gradient(135deg,#4d6dff,#213c9f)
-    }
-    .icon-button{
-      position:relative;width:52px;height:52px;border:none;border-radius:18px;background:rgba(255,255,255,.08);color:var(--text);
-      display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.08)
-    }
-    .icon-button.small{width:40px;height:40px;border-radius:12px}
-    .badge{
-      position:absolute;top:-4px;right:-2px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#ff5f63;color:#fff;
-      font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center
-    }
-    .summary-card{
-      padding:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px
-    }
-    .summary-left{display:flex;align-items:center;gap:14px}
-    .wallet-box{
-      width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#2e82ff,#2049d4);
-      display:flex;align-items:center;justify-content:center;color:#fff
-    }
-    .card-label{font-size:14px;color:#d2dbff;font-weight:700}
-    .summary-price{font-size:34px;font-weight:900}
-    .summary-mini{margin-top:6px;font-size:13px;color:var(--muted)}
-    .voice-card-btn{
-      border:none;border-radius:22px;padding:14px 18px;min-width:150px;background:linear-gradient(135deg, rgba(21,28,66,.95), rgba(35,45,100,.95));
-      color:#fff;display:flex;align-items:center;gap:12px
-    }
-    .voice-card-btn span{display:block;font-weight:800;text-align:left}
-    .voice-card-btn small{display:block;color:#9db0eb;text-align:left;margin-top:3px}
-    .mini-stats{
-      display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px
-    }
-    .mini-stat{padding:14px}
-    .mini-stat-label{font-size:13px;color:var(--muted);margin-bottom:6px}
-    .mini-stat-value{font-size:22px;font-weight:900}
-    .search-card,.add-card,.chart-card,.report-card,.settings-card{
-      padding:16px;margin-bottom:16px
-    }
-    .search-input-wrap{
-      display:flex;align-items:center;gap:12px;border-radius:24px;padding:14px 16px;background:rgba(8,15,40,.32);border:1px solid rgba(255,255,255,.08)
-    }
-    .search-input-wrap input{margin-top:0;background:transparent;padding:0}
-    .input,.textarea,select.input{
-      width:100%;margin-top:10px;border:none;outline:none;border-radius:16px;padding:14px 16px;font-size:16px;background:rgba(255,255,255,.08);color:var(--text)
-    }
-    .auth-input{color:#fff}
-    .auth-input::placeholder{color:#dbeafe}
-    .dark{background:rgba(9,16,41,.35);border:1px solid rgba(255,255,255,.08)}
-    .textarea{min-height:90px;resize:vertical}
-    .primary-btn,.secondary-btn,.settings-btn,.nav-item,.nav-center-btn,.action-btn{
-      border:none;cursor:pointer
-    }
-    .primary-btn{
-      width:100%;margin-top:12px;border-radius:16px;padding:14px;background:linear-gradient(135deg,var(--blue),var(--blue-2));color:#fff;font-weight:900;font-size:16px
-    }
-    .secondary-btn{
-      width:100%;margin-top:12px;border-radius:16px;padding:14px;background:rgba(255,255,255,.1);color:var(--text);font-weight:800;font-size:16px
-    }
-    .section-head{margin-bottom:14px;font-size:17px;font-weight:800}
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .section-title-line{display:flex;align-items:center;gap:10px;margin:8px 4px 14px}
-    .section-title-left{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;white-space:nowrap}
-    .title-line{height:1px;width:100%;background:rgba(255,255,255,.16)}
-    .record-card{padding:16px;margin-bottom:14px}
-    .record-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-    .record-left{display:flex;gap:12px;align-items:center}
-    .record-avatar{
-      width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#5d7fff,#2947be);
-      display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff
-    }
-    .record-name{font-size:18px;font-weight:900;margin-bottom:6px}
-    .record-badge{
-      display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900;color:#fff
-    }
-    .badge-positive{background:linear-gradient(135deg,#35c36e,#299a57)}
-    .badge-negative{background:linear-gradient(135deg,#ff9f3f,#ff7e21)}
-    .record-meta{margin-top:10px;font-size:13px;color:var(--muted)}
-    .record-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
-    .action-btn{
-      border-radius:14px;padding:10px 12px;font-size:14px;font-weight:800;color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:7px;
-      background:linear-gradient(135deg, rgba(27,38,89,.96), rgba(43,58,123,.96))
-    }
-    .action-btn.primary{background:linear-gradient(135deg,#2f7cff,#1458f4)}
-    .action-btn.warn{background:linear-gradient(135deg,#515875,#363e5c)}
-    .action-btn.danger{background:linear-gradient(135deg,#ff6b6b,#ef4444)}
-    .empty-state{padding:16px;text-align:center;color:var(--muted)}
-    .tab-panel{display:none}
-    .tab-panel.active{display:block}
-    .chart-wrap{position:relative;height:260px}
-    .report-summary{display:grid;gap:10px}
-    .report-line{display:flex;justify-content:space-between;font-size:15px}
-    .settings-list{display:grid;gap:10px}
-    .settings-btn{
-      width:100%;border-radius:16px;padding:14px 16px;background:rgba(255,255,255,.08);color:var(--text);font-weight:800;
-      display:flex;align-items:center;gap:10px;justify-content:flex-start
-    }
-    .settings-btn.danger{background:rgba(255,90,103,.16);color:#ffd6db}
-    .bottom-nav{
-      position:fixed;left:50%;bottom:14px;transform:translateX(-50%);width:min(96%, 540px);padding:12px 10px;
-      display:flex;gap:6px;align-items:end;justify-content:center;flex-wrap:wrap;z-index:30
-    }
-    .nav-item{
-      background:transparent;color:#d6defd;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-      font-size:12px;font-weight:700;border:none;min-width:58px
-    }
-    .nav-item.active{color:#fff}
-    .nav-center-btn{
-      width:74px;height:74px;margin:-32px auto 0;border:none;border-radius:50%;background:linear-gradient(135deg,#3b8cff,#1d5df6);color:#fff;
-      display:flex;align-items:center;justify-content:center
-    }
-    .drawer{
-      position:fixed;inset:0;background:rgba(2,6,23,.45);z-index:9999;padding:24px 14px
-    }
-    .drawer-card{
-      width:min(100%, 480px);margin:0 auto;background:linear-gradient(180deg, rgba(72,88,152,.55), rgba(34,45,88,.55));
-      border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:16px
-    }
-    .drawer-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:900}
-    .drawer-list{display:grid;gap:10px}
-    .notification-item{padding:12px;border-radius:16px;background:rgba(255,255,255,.08);font-size:14px}
-    @media (max-width:430px){
-      .summary-card,.form-grid,.action-row,.record-actions,.mini-stats{grid-template-columns:1fr;display:grid}
-      .summary-card{display:flex;flex-direction:column;align-items:flex-start}
-      .voice-card-btn{width:100%;justify-content:center}
-      .main-title{font-size:28px}
-      .summary-price{font-size:30px}
-    }
-  </style>
 </head>
 <body>
   <div class="bg-blur bg-blur-1"></div>
   <div class="bg-blur bg-blur-2"></div>
 
-  <div id="authOverlay" class="overlay">
-    <div class="auth-card">
-      <div class="auth-logo">M</div>
-      <div class="auth-title">Muhasebecin</div>
-      <div class="auth-subtitle">Postal Dijital tarafından oluşturuldu</div>
-      <div class="auth-tabs">
-        <button id="loginTabBtn" class="auth-tab active" type="button">Giriş Yap</button>
-        <button id="registerTabBtn" class="auth-tab" type="button">Kayıt Ol</button>
-      </div>
-      <div id="registerFields" class="hidden">
-        <input id="registerUsername" class="input auth-input" placeholder="Kullanıcı adı" />
-      </div>
-      <input id="authLoginValue" class="input auth-input" placeholder="E-posta" />
-      <input id="authEmail" class="input auth-input hidden" placeholder="E-posta" />
-      <input id="authPassword" class="input auth-input" type="password" placeholder="Şifre" />
-      <button id="authSubmitBtn" class="primary-btn" type="button">Giriş Yap</button>
-      <div id="authMessage" class="auth-message"></div>
-    </div>
-  </div>
-
-  <div id="appRoot" class="app hidden">
+  <div class="app">
     <header class="topbar">
-      <div class="top-user"><div id="avatarCircle" class="avatar">M</div></div>
+      <div class="top-user">
+        <div class="avatar">M</div>
+      </div>
+
       <div class="top-title">
         <div class="mini-title">Kişisel / Küçük İşletme Muhasebesi</div>
         <div class="main-title">Muhasebecin</div>
         <div class="sub-title">Postal Dijital tarafından oluşturuldu</div>
       </div>
+
       <button id="notificationBtn" class="icon-button" type="button">
         <i data-lucide="bell"></i>
         <span id="notificationBadge" class="badge hidden">0</span>
@@ -257,24 +32,45 @@
 
     <section class="summary-card glass-card">
       <div class="summary-left">
-        <div class="wallet-box"><i data-lucide="wallet"></i></div>
+        <div class="wallet-box">
+          <i data-lucide="wallet"></i>
+        </div>
         <div>
           <div class="card-label">Net Durum</div>
           <div class="summary-price">₺ <span id="netTotal">0</span></div>
           <div class="summary-mini" id="summaryMini">Hazır</div>
         </div>
       </div>
+
       <button id="voiceBtn" class="voice-card-btn" type="button">
         <i data-lucide="mic"></i>
-        <div><span>Sesli Komut</span><small>Komut ver</small></div>
+        <div>
+          <span>Sesli Komut</span>
+          <small>Komut ver</small>
+        </div>
       </button>
     </section>
 
     <section class="mini-stats">
-      <div class="mini-stat glass-card"><div class="mini-stat-label">Bu Ay Gelir</div><div class="mini-stat-value">₺ <span id="monthIncome">0</span></div></div>
-      <div class="mini-stat glass-card"><div class="mini-stat-label">Bu Ay Gider</div><div class="mini-stat-value">₺ <span id="monthExpense">0</span></div></div>
-      <div class="mini-stat glass-card"><div class="mini-stat-label">Bana Borçlu</div><div class="mini-stat-value">₺ <span id="owedToMeTotal">0</span></div></div>
-      <div class="mini-stat glass-card"><div class="mini-stat-label">Ben Borçluyum</div><div class="mini-stat-value">₺ <span id="iOweTotal">0</span></div></div>
+      <div class="mini-stat glass-card">
+        <div class="mini-stat-label">Bu Ay Gelir</div>
+        <div class="mini-stat-value">₺ <span id="monthIncome">0</span></div>
+      </div>
+
+      <div class="mini-stat glass-card">
+        <div class="mini-stat-label">Bu Ay Gider</div>
+        <div class="mini-stat-value">₺ <span id="monthExpense">0</span></div>
+      </div>
+
+      <div class="mini-stat glass-card">
+        <div class="mini-stat-label">Bana Borçlu</div>
+        <div class="mini-stat-value">₺ <span id="owedToMeTotal">0</span></div>
+      </div>
+
+      <div class="mini-stat glass-card">
+        <div class="mini-stat-label">Ben Borçluyum</div>
+        <div class="mini-stat-value">₺ <span id="iOweTotal">0</span></div>
+      </div>
     </section>
 
     <section class="search-card glass-card">
@@ -287,10 +83,12 @@
     <section id="debtsTab" class="tab-panel active">
       <section class="add-card glass-card">
         <div class="section-head">Borç Kaydı Ekle</div>
+
         <div class="form-grid">
           <input id="personNameInput" class="input dark" placeholder="Kişi adı" />
           <input id="debtAmountInput" class="input dark" type="number" placeholder="Tutar" />
         </div>
+
         <div class="form-grid">
           <select id="relationSelect" class="input dark">
             <option value="they_owe_me">Bu kişi bana borçlu</option>
@@ -298,201 +96,234 @@
           </select>
           <input id="debtDueDateInput" class="input dark" type="date" />
         </div>
+
         <textarea id="debtNoteInput" class="textarea dark" placeholder="Not"></textarea>
+
         <div class="action-row">
           <button id="addDebtBtn" class="primary-btn" type="button">Borç Kaydı Ekle</button>
           <button id="clearDebtFormBtn" class="secondary-btn" type="button">Temizle</button>
         </div>
       </section>
+
       <section class="section-title-line">
-        <div class="section-title-left"><i data-lucide="users"></i><span>Borçlar</span></div>
+        <div class="section-title-left">
+          <i data-lucide="users"></i>
+          <span>Borçlar</span>
+        </div>
         <div class="title-line"></div>
       </section>
+
       <div id="debtsList"></div>
     </section>
 
     <section id="incomeTab" class="tab-panel">
       <section class="add-card glass-card">
         <div class="section-head">Gelir Ekle</div>
+
         <div class="form-grid">
           <input id="incomeTitleInput" class="input dark" placeholder="Gelir başlığı" />
           <input id="incomeAmountInput" class="input dark" type="number" placeholder="Tutar" />
         </div>
+
         <div class="form-grid">
           <input id="incomeDateInput" class="input dark" type="date" />
           <input id="incomeCategoryInput" class="input dark" placeholder="Kategori" />
         </div>
+
         <textarea id="incomeNoteInput" class="textarea dark" placeholder="Not"></textarea>
+
         <div class="action-row">
           <button id="addIncomeBtn" class="primary-btn" type="button">Gelir Ekle</button>
           <button id="clearIncomeFormBtn" class="secondary-btn" type="button">Temizle</button>
         </div>
       </section>
+
       <div id="incomeList"></div>
     </section>
 
     <section id="expenseTab" class="tab-panel">
       <section class="add-card glass-card">
         <div class="section-head">Gider Ekle</div>
+
         <div class="form-grid">
           <input id="expenseTitleInput" class="input dark" placeholder="Gider başlığı" />
           <input id="expenseAmountInput" class="input dark" type="number" placeholder="Tutar" />
         </div>
+
         <div class="form-grid">
           <input id="expenseDateInput" class="input dark" type="date" />
           <input id="expenseCategoryInput" class="input dark" placeholder="Kategori" />
         </div>
+
         <textarea id="expenseNoteInput" class="textarea dark" placeholder="Not"></textarea>
+
         <div class="action-row">
           <button id="addExpenseBtn" class="primary-btn" type="button">Gider Ekle</button>
           <button id="clearExpenseFormBtn" class="secondary-btn" type="button">Temizle</button>
         </div>
       </section>
+
       <div id="expenseList"></div>
     </section>
 
     <section id="billsTab" class="tab-panel">
       <section class="add-card glass-card">
         <div class="section-head">Fatura Ekle</div>
+
         <div class="form-grid">
           <input id="billTitleInput" class="input dark" placeholder="Fatura adı" />
           <input id="billAmountInput" class="input dark" type="number" placeholder="Tutar" />
         </div>
+
         <div class="form-grid">
           <input id="billDueDateInput" class="input dark" type="date" />
           <input id="billCategoryInput" class="input dark" placeholder="Kategori" />
         </div>
+
         <textarea id="billNoteInput" class="textarea dark" placeholder="Not"></textarea>
+
         <div class="action-row">
           <button id="addBillBtn" class="primary-btn" type="button">Fatura Ekle</button>
           <button id="clearBillFormBtn" class="secondary-btn" type="button">Temizle</button>
         </div>
       </section>
+
       <div id="billList"></div>
     </section>
 
     <section id="salaryTab" class="tab-panel">
       <section class="add-card glass-card">
         <div class="section-head">Eleman Maaşı Ekle</div>
+
         <div class="form-grid">
           <input id="salaryNameInput" class="input dark" placeholder="Eleman adı" />
           <input id="salaryAmountInput" class="input dark" type="number" placeholder="Maaş tutarı" />
         </div>
+
         <div class="form-grid">
           <input id="salaryDateInput" class="input dark" type="date" />
           <input id="salaryRoleInput" class="input dark" placeholder="Görev / pozisyon" />
         </div>
+
         <textarea id="salaryNoteInput" class="textarea dark" placeholder="Not"></textarea>
+
         <div class="action-row">
           <button id="addSalaryBtn" class="primary-btn" type="button">Maaş Ekle</button>
           <button id="clearSalaryFormBtn" class="secondary-btn" type="button">Temizle</button>
         </div>
       </section>
+
       <div id="salaryList"></div>
     </section>
 
     <section id="reportsTab" class="tab-panel">
       <section class="chart-card glass-card">
         <div class="section-head">Aylık Genel Grafik</div>
-        <div class="chart-wrap"><canvas id="financeChart"></canvas></div>
+        <div class="chart-wrap">
+          <canvas id="financeChart"></canvas>
+        </div>
       </section>
+
       <section class="glass-card report-card">
         <div class="section-head">Aylık / Yıllık Özet</div>
         <div id="reportSummary" class="report-summary"></div>
       </section>
- <script type="module">
+    </section>
 
-// Firebase import
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    <section id="settingsTab" class="tab-panel">
+      <section class="glass-card settings-card">
+        <div class="section-head">Ayarlar</div>
 
-// Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyCQfe0kFo_2owofpOMmNdTqNwLxxsSvSKU",
-  authDomain: "muhasebecinizz.firebaseapp.com",
-  projectId: "muhasebecinizz",
-  storageBucket: "muhasebecinizz.firebasestorage.app",
-  messagingSenderId: "717751925179",
-  appId: "1:717751925179:web:6b927078475e11fce96c9e",
-  measurementId: "G-94R335GH2Y"
-};
+        <div class="settings-list">
+          <button id="requestNotificationBtn" class="settings-btn" type="button">
+            <i data-lucide="bell-ring"></i>
+            <span>Bildirim İzni İste</span>
+          </button>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+          <button id="testNotificationBtn" class="settings-btn" type="button">
+            <i data-lucide="send"></i>
+            <span>Test Bildirimi Göster</span>
+          </button>
 
-// ELEMENTLER
-const authOverlay = document.getElementById("authOverlay");
-const appRoot = document.getElementById("appRoot");
-const loginTabBtn = document.getElementById("loginTabBtn");
-const registerTabBtn = document.getElementById("registerTabBtn");
-const registerFields = document.getElementById("registerFields");
-const authSubmitBtn = document.getElementById("authSubmitBtn");
-const authLoginValue = document.getElementById("authLoginValue");
-const authPassword = document.getElementById("authPassword");
-const authEmail = document.getElementById("authEmail");
-const authMessage = document.getElementById("authMessage");
-const logoutBtn = document.getElementById("logoutBtn");
+          <button id="toggleThemeBtn" class="settings-btn" type="button">
+            <i data-lucide="moon-star"></i>
+            <span>Tema Geçişi</span>
+          </button>
 
-let isRegister = false;
+          <button id="exportJsonBtn" class="settings-btn" type="button">
+            <i data-lucide="download"></i>
+            <span>JSON Yedek İndir</span>
+          </button>
 
-// TAB değişimi
-loginTabBtn.onclick = () => {
-  isRegister = false;
-  loginTabBtn.classList.add("active");
-  registerTabBtn.classList.remove("active");
-  registerFields.classList.add("hidden");
-  authSubmitBtn.textContent = "Giriş Yap";
-};
+          <button id="importJsonBtn" class="settings-btn" type="button">
+            <i data-lucide="upload"></i>
+            <span>JSON Yedek Yükle</span>
+          </button>
 
-registerTabBtn.onclick = () => {
-  isRegister = true;
-  registerTabBtn.classList.add("active");
-  loginTabBtn.classList.remove("active");
-  registerFields.classList.remove("hidden");
-  authSubmitBtn.textContent = "Kayıt Ol";
-};
+          <input id="importFileInput" type="file" accept=".json" class="hidden" />
 
-// AUTH işlemi
-authSubmitBtn.onclick = async () => {
+          <button id="resetDataBtn" class="settings-btn" type="button">
+            <i data-lucide="rotate-ccw"></i>
+            <span>Tüm Veriyi Sıfırla</span>
+          </button>
+        </div>
+      </section>
+    </section>
 
-  const email = isRegister ? authEmail.value : authLoginValue.value;
-  const password = authPassword.value;
+    <nav class="bottom-nav glass-card">
+      <button class="nav-item active" data-tab="debts" type="button">
+        <i data-lucide="users"></i>
+        <span>Borç</span>
+      </button>
 
-  if(!email || !password){
-    authMessage.textContent = "Bilgileri doldur.";
-    return;
-  }
+      <button class="nav-item" data-tab="income" type="button">
+        <i data-lucide="banknote-arrow-up"></i>
+        <span>Gelir</span>
+      </button>
 
-  try{
+      <button class="nav-center-btn" id="navCenterBtn" type="button">
+        <i data-lucide="plus"></i>
+      </button>
 
-    if(isRegister){
-      await createUserWithEmailAndPassword(auth,email,password);
-      authMessage.textContent = "Kayıt başarılı";
-    }else{
-      await signInWithEmailAndPassword(auth,email,password);
-      authMessage.textContent = "Giriş başarılı";
-    }
+      <button class="nav-item" data-tab="expense" type="button">
+        <i data-lucide="banknote-arrow-down"></i>
+        <span>Gider</span>
+      </button>
 
-  }catch(e){
-    authMessage.textContent = e.message;
-  }
+      <button class="nav-item" data-tab="bills" type="button">
+        <i data-lucide="receipt-text"></i>
+        <span>Fatura</span>
+      </button>
 
-};
+      <button class="nav-item" data-tab="salary" type="button">
+        <i data-lucide="briefcase-business"></i>
+        <span>Maaş</span>
+      </button>
 
-// auth state
-onAuthStateChanged(auth,(user)=>{
-  if(user){
-    authOverlay.classList.add("hidden");
-    appRoot.classList.remove("hidden");
-  }else{
-    authOverlay.classList.remove("hidden");
-    appRoot.classList.add("hidden");
-  }
-});
+      <button class="nav-item" data-tab="reports" type="button">
+        <i data-lucide="bar-chart-3"></i>
+        <span>Rapor</span>
+      </button>
 
-// çıkış
-logoutBtn.onclick = ()=>{
-  signOut(auth);
-};
+      <button class="nav-item" data-tab="settings" type="button">
+        <i data-lucide="settings"></i>
+        <span>Ayar</span>
+      </button>
+    </nav>
+  </div>
 
-  </script>
+  <div id="notificationDrawer" class="drawer hidden">
+    <div class="drawer-card">
+      <div class="drawer-header">
+        <span>Bildirimler</span>
+        <button id="closeDrawerBtn" class="icon-button small" type="button">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div id="notificationList" class="drawer-list"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+          </html>
