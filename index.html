@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muhasebecin</title><style>
+body{
+font-family: Arial;
+background:#111;
+color:white;
+text-align:center;
+padding:20px;
+}
+
+button{
+padding:12px;
+margin:10px;
+font-size:16px;
+border:none;
+border-radius:8px;
+background:#00b894;
+color:white;
+}
+
+input{
+padding:10px;
+margin:5px;
+border-radius:6px;
+border:none;
+}
+
+.card{
+background:#222;
+padding:15px;
+margin:10px;
+border-radius:10px;
+}
+</style></head><body><h1>Muhasebecin</h1><input id="isim" placeholder="Kişi adı">
+<input id="borc" type="number" placeholder="Tutar"><br><button onclick="ekle()">Borç Ekle</button>
+
+<h2>Kayıtlar</h2><div id="liste"></div><script>
+
+let kisiler=[];
+
+function ekle(){
+
+let isim=document.getElementById("isim").value;
+let borc=document.getElementById("borc").value;
+
+if(!isim || !borc)return;
+
+kisiler.push({isim,borc});
+
+goster();
+
+}
+
+function goster(){
+
+let liste=document.getElementById("liste");
+
+liste.innerHTML="";
+
+kisiler.forEach(k=>{
+
+liste.innerHTML+=`
+<div class="card">
+${k.isim} : ${k.borc} TL
+</div>
+`;
+
+});
+
+}
+
+</script></body>
+</html>
