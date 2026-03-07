@@ -1,1 +1,102 @@
+/* GENEL */
 
+body{
+font-family: Arial, Helvetica, sans-serif;
+background:#0f0f0f;
+color:white;
+margin:0;
+padding:0;
+}
+
+/* ANA CONTAINER */
+
+.container{
+max-width:800px;
+margin:auto;
+padding:20px;
+}
+
+/* BAŞLIK */
+
+h1{
+text-align:center;
+margin-bottom:20px;
+}
+
+/* INPUTLAR */
+
+input{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+background:#1e1e1e;
+color:white;
+font-size:16px;
+box-sizing:border-box;
+}
+
+/* BUTONLAR */
+
+button{
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-size:16px;
+}
+
+/* BUTON RENKLERİ */
+
+.btn-ekle{
+background:#00b894;
+color:white;
+}
+
+.btn-dus{
+background:#e17055;
+color:white;
+}
+
+.btn-sil{
+background:#636e72;
+color:white;
+}
+
+.btn-mic{
+background:#0984e3;
+color:white;
+}
+
+/* KART */
+
+.card{
+background:#1e1e1e;
+padding:15px;
+margin-top:15px;
+border-radius:10px;
+}
+
+/* TOPLAM */
+
+.toplam{
+font-size:20px;
+margin-bottom:15px;
+color:#00cec9;
+}
+
+/* HAREKET */
+
+.hareket{
+font-size:14px;
+color:#aaaaaa;
+margin-top:4px;
+}
+
+/* ARAMA */
+
+.search{
+margin-top:15px;
+}
