@@ -1,215 +1,81 @@
-<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Muhasebecin</title><link rel="manifest" href="manifest.json"><style>
-
-body{
-font-family:Arial;
-background:#0f0f0f;
-color:white;
-margin:0;
-padding:20px;
-}
-
-h1{
-text-align:center;
-}
-
-.container{
-max-width:600px;
-margin:auto;
-}
-
-input{
-padding:10px;
-margin:5px;
-border:none;
-border-radius:8px;
-font-size:16px;
-}
-
-button{
-padding:10px;
-border:none;
-border-radius:8px;
-margin:5px;
-cursor:pointer;
-}
-
-.ekle{
-background:#00b894;
-color:white;
-}
-
-.dus{
-background:#e17055;
-color:white;
-}
-
-.sil{
-background:#636e72;
-color:white;
-}
-
-.card{
-background:#1e1e1e;
-padding:15px;
-margin-top:10px;
-border-radius:10px;
-}
-
-.toplam{
-font-size:20px;
-margin:10px 0;
-color:#00cec9;
-}
-
-.hareket{
-font-size:14px;
-color:#aaa;
-}
-
-</style></head><body><div class="container"><h1>Muhasebecin</h1><div class="toplam">
-Toplam Borç: <span id="toplam">0</span> TL
-</div><input id="isim" placeholder="Kişi adı">
-<input id="tutar" type="number" placeholder="Tutar"><br><button class="ekle" onclick="borcEkle()">Borç Ekle</button>
-<button onclick="borcDus()">Borç Düş</button>
-
-<br><br>
-
-<input id="arama" placeholder="Kişi ara" oninput="listele()"><div id="liste"></div></div><script>
-
-let veriler = JSON.parse(localStorage.getItem("muhasebe")) || [];
-
-function kaydet(){
-localStorage.setItem("muhasebe",JSON.stringify(veriler));
-}
-
-function kisiBul(isim){
-return veriler.find(k=>k.isim.toLowerCase()==isim.toLowerCase());
-}
-
-function borcEkle(){
-
-let isim=document.getElementById("isim").value.trim();
-let tutar=Number(document.getElementById("tutar").value);
-
-if(!isim || !tutar)return;
-
-let kisi=kisiBul(isim);
-
-if(!kisi){
-
-kisi={
-isim:isim,
-bakiye:0,
-hareketler:[]
-};
-
-veriler.push(kisi);
-
-}
-
-kisi.bakiye+=tutar;
-
-kisi.hareketler.push({
-tip:"ekle",
-tutar:tutar,
-tarih:new Date().toLocaleString()
-});
-
-kaydet();
-
-listele();
-
-}
-
-function borcDus(){
-
-let isim=document.getElementById("isim").value.trim();
-let tutar=Number(document.getElementById("tutar").value);
-
-if(!isim || !tutar)return;
-
-let kisi=kisiBul(isim);
-
-if(!kisi)return;
-
-kisi.bakiye-=tutar;
-
-kisi.hareketler.push({
-tip:"dus",
-tutar:tutar,
-tarih:new Date().toLocaleString()
-});
-
-kaydet();
-
-listele();
-
-}
-
-function kisiSil(index){
-
-veriler.splice(index,1);
-
-kaydet();
-
-listele();
-
-}
-
-function listele(){
-
-let liste=document.getElementById("liste");
-
-let arama=document.getElementById("arama").value.toLowerCase();
-
-liste.innerHTML="";
-
-let toplam=0;
-
-veriler.forEach((k,i)=>{
-
-if(!k.isim.toLowerCase().includes(arama))return;
-
-toplam+=k.bakiye;
-
-let hareketHTML="";
-
-k.hareketler.slice().reverse().forEach(h=>{
-
-hareketHTML+=`
-<div class="hareket">
-${h.tip=="ekle" ? "+" : "-"} ${h.tutar} TL
-(${h.tarih})
-</div>
-`;
-
-});
-
-liste.innerHTML+=`
-<div class="card">
-
-<b>${k.isim}</b><br>
-
-Borç: ${k.bakiye} TL
-
-<br><br>
-
-<button class="sil" onclick="kisiSil(${i})">Sil</button>
-
-<br><br>
-
-${hareketHTML}
-
-</div>
-`;
-
-});
-
-document.getElementById("toplam").innerText=toplam;
-
-}
-
-listele();
-
-</script></body></html>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Muhasebecin</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+
+  <script src="database.js"></script>
+  <script src="utils.js"></script>
+  <script src="auth.js"></script>
+  <script src="backup.js"></script>
+  <script src="export.js"></script>
+  <script src="charts.js"></script>
+  <script src="notifications.js"></script>
+  <script src="voice.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Muhasebecin</h1>
+
+    <div class="toplam">
+      Toplam Borç: <span id="toplam">0</span>
+    </div>
+
+    <input id="isim" type="text" placeholder="Kişi adı" />
+
+    <button class="btn-ekle" onclick="yeniKisi()">Kişi Ekle</button>
+
+    <input
+      id="arama"
+      class="search"
+      type="text"
+      placeholder="Kişi ara"
+      oninput="aramaYap()"
+    />
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+      <button class="btn-mic" onclick="sesliKomutBaslat()">🎤 Sesli Komut</button>
+      <button onclick="csvIndir()">CSV İndir</button>
+      <button onclick="jsonYedek()">Yedek İndir</button>
+      <button onclick="yedekYukleDosyaSec()">Yedek Yükle</button>
+    </div>
+
+    <div id="liste"></div>
+
+    <div class="card">
+      <h3>Grafik</h3>
+      <canvas id="grafik"></canvas>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./service-worker.js");
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      if (typeof listeyiGuncelle === "function") {
+        listeyiGuncelle();
+      }
+
+      if (typeof grafikCiz === "function") {
+        grafikCiz();
+      }
+
+      if (typeof hatirlaticiKontrol === "function") {
+        hatirlaticiKontrol();
+      }
+    });
+  </script>
+</body>
+      </html>
