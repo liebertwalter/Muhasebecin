@@ -1,8 +1,12 @@
-const LOCAL_KEY = "muhasebecin_store";
+const STORE_KEY = "muhasebecin_store";
 
 export function createEmptyStore() {
   return {
-    people: [],
+    debts: [],
+    incomes: [],
+    expenses: [],
+    bills: [],
+    salaries: [],
     settings: {
       theme: "dark",
       notifications: false
@@ -10,15 +14,20 @@ export function createEmptyStore() {
   };
 }
 
+export function generateId() {
+  return "id_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+}
+
 export function normalizeStore(data) {
   const base = createEmptyStore();
-
-  if (!data || typeof data !== "object") {
-    return base;
-  }
+  if (!data || typeof data !== "object") return base;
 
   return {
-    people: Array.isArray(data.people) ? data.people.map(normalizePerson) : [],
+    debts: Array.isArray(data.debts) ? data.debts : [],
+    incomes: Array.isArray(data.incomes) ? data.incomes : [],
+    expenses: Array.isArray(data.expenses) ? data.expenses : [],
+    bills: Array.isArray(data.bills) ? data.bills : [],
+    salaries: Array.isArray(data.salaries) ? data.salaries : [],
     settings: {
       ...base.settings,
       ...(data.settings || {})
@@ -26,20 +35,8 @@ export function normalizeStore(data) {
   };
 }
 
-function normalizePerson(person) {
-  return {
-    id: person.id || generateId(),
-    name: person.name || "İsimsiz",
-    relation: person.relation === "i_owe_them" ? "i_owe_them" : "they_owe_me",
-    balance: Number(person.balance) || 0,
-    dueDate: person.dueDate || "",
-    note: person.note || "",
-    history: Array.isArray(person.history) ? person.history : []
-  };
-}
-
 export function loadLocalStore() {
-  const raw = localStorage.getItem(LOCAL_KEY);
+  const raw = localStorage.getItem(STORE_KEY);
   if (!raw) return createEmptyStore();
 
   try {
@@ -50,204 +47,243 @@ export function loadLocalStore() {
 }
 
 export function saveLocalStore(store) {
-  const normalized = normalizeStore(store);
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(normalized));
+  localStorage.setItem(STORE_KEY, JSON.stringify(normalizeStore(store)));
 }
 
-export function generateId() {
-  return "id_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
-}
-
-export function addPersonRecord(store, payload) {
+export function addDebt(store, payload) {
   const next = normalizeStore(store);
 
-  const person = {
+  next.debts.unshift({
     id: generateId(),
-    name: payload.name.trim(),
+    name: payload.name,
+    amount: Number(payload.amount),
     relation: payload.relation,
-    balance: Number(payload.amount) || 0,
     dueDate: payload.dueDate || "",
     note: payload.note || "",
-    history: [
-      {
-        id: generateId(),
-        type: "create",
-        amount: Number(payload.amount) || 0,
-        note: payload.note || "İlk kayıt",
-        at: new Date().toLocaleString("tr-TR")
-      }
-    ]
+    createdAt: new Date().toLocaleString("tr-TR")
+  });
+
+  return next;
+}
+
+export function addIncome(store, payload) {
+  const next = normalizeStore(store);
+
+  next.incomes.unshift({
+    id: generateId(),
+    title: payload.title,
+    amount: Number(payload.amount),
+    date: payload.date || "",
+    category: payload.category || "",
+    note: payload.note || "",
+    createdAt: new Date().toLocaleString("tr-TR")
+  });
+
+  return next;
+}
+
+export function addExpense(store, payload) {
+  const next = normalizeStore(store);
+
+  next.expenses.unshift({
+    id: generateId(),
+    title: payload.title,
+    amount: Number(payload.amount),
+    date: payload.date || "",
+    category: payload.category || "",
+    note: payload.note || "",
+    createdAt: new Date().toLocaleString("tr-TR")
+  });
+
+  return next;
+}
+
+export function addBill(store, payload) {
+  const next = normalizeStore(store);
+
+  next.bills.unshift({
+    id: generateId(),
+    title: payload.title,
+    amount: Number(payload.amount),
+    dueDate: payload.dueDate || "",
+    category: payload.category || "",
+    note: payload.note || "",
+    paid: false,
+    createdAt: new Date().toLocaleString("tr-TR")
+  });
+
+  return next;
+}
+
+export function addSalary(store, payload) {
+  const next = normalizeStore(store);
+
+  next.salaries.unshift({
+    id: generateId(),
+    name: payload.name,
+    amount: Number(payload.amount),
+    date: payload.date || "",
+    role: payload.role || "",
+    note: payload.note || "",
+    paid: false,
+    createdAt: new Date().toLocaleString("tr-TR")
+  });
+
+  return next;
+}
+
+export function toggleBillPaid(store, id) {
+  const next = normalizeStore(store);
+  next.bills = next.bills.map((item) =>
+    item.id === id ? { ...item, paid: !item.paid } : item
+  );
+  return next;
+}
+
+export function toggleSalaryPaid(store, id) {
+  const next = normalizeStore(store);
+  next.salaries = next.salaries.map((item) =>
+    item.id === id ? { ...item, paid: !item.paid } : item
+  );
+  return next;
+}
+
+export function deleteDebt(store, id) {
+  const next = normalizeStore(store);
+  next.debts = next.debts.filter((item) => item.id !== id);
+  return next;
+}
+
+export function deleteIncome(store, id) {
+  const next = normalizeStore(store);
+  next.incomes = next.incomes.filter((item) => item.id !== id);
+  return next;
+}
+
+export function deleteExpense(store, id) {
+  const next = normalizeStore(store);
+  next.expenses = next.expenses.filter((item) => item.id !== id);
+  return next;
+}
+
+export function deleteBill(store, id) {
+  const next = normalizeStore(store);
+  next.bills = next.bills.filter((item) => item.id !== id);
+  return next;
+}
+
+export function deleteSalary(store, id) {
+  const next = normalizeStore(store);
+  next.salaries = next.salaries.filter((item) => item.id !== id);
+  return next;
+}
+
+function currentMonthYear() {
+  const now = new Date();
+  return {
+    month: now.getMonth() + 1,
+    year: now.getFullYear()
   };
-
-  next.people.unshift(person);
-  return next;
 }
 
-export function addTransaction(store, personId, amount, note = "Borç eklendi") {
-  const next = normalizeStore(store);
+function matchMonthYear(dateValue) {
+  if (!dateValue) return false;
+  const date = new Date(dateValue);
+  if (isNaN(date)) return false;
 
-  next.people = next.people.map((person) => {
-    if (person.id !== personId) return person;
-
-    return {
-      ...person,
-      balance: Number(person.balance) + Number(amount),
-      history: [
-        ...person.history,
-        {
-          id: generateId(),
-          type: "add",
-          amount: Number(amount),
-          note,
-          at: new Date().toLocaleString("tr-TR")
-        }
-      ]
-    };
-  });
-
-  return next;
-}
-
-export function recordPayment(store, personId, amount, note = "Ödeme girildi") {
-  const next = normalizeStore(store);
-
-  next.people = next.people.map((person) => {
-    if (person.id !== personId) return person;
-
-    const newBalance = Math.max(0, Number(person.balance) - Number(amount));
-
-    return {
-      ...person,
-      balance: newBalance,
-      history: [
-        ...person.history,
-        {
-          id: generateId(),
-          type: "payment",
-          amount: Number(amount),
-          note,
-          at: new Date().toLocaleString("tr-TR")
-        }
-      ]
-    };
-  });
-
-  return next;
-}
-
-export function toggleRelation(store, personId) {
-  const next = normalizeStore(store);
-
-  next.people = next.people.map((person) => {
-    if (person.id !== personId) return person;
-
-    return {
-      ...person,
-      relation: person.relation === "they_owe_me" ? "i_owe_them" : "they_owe_me",
-      history: [
-        ...person.history,
-        {
-          id: generateId(),
-          type: "relation",
-          amount: 0,
-          note: "Borç yönü değiştirildi",
-          at: new Date().toLocaleString("tr-TR")
-        }
-      ]
-    };
-  });
-
-  return next;
-}
-
-export function updateDueDate(store, personId, dueDate) {
-  const next = normalizeStore(store);
-
-  next.people = next.people.map((person) => {
-    if (person.id !== personId) return person;
-
-    return {
-      ...person,
-      dueDate,
-      history: [
-        ...person.history,
-        {
-          id: generateId(),
-          type: "date",
-          amount: 0,
-          note: "Vade tarihi güncellendi",
-          at: new Date().toLocaleString("tr-TR")
-        }
-      ]
-    };
-  });
-
-  return next;
-}
-
-export function deletePerson(store, personId) {
-  const next = normalizeStore(store);
-  next.people = next.people.filter((person) => person.id !== personId);
-  return next;
+  const { month, year } = currentMonthYear();
+  return date.getMonth() + 1 === month && date.getFullYear() === year;
 }
 
 export function computeSummary(store) {
-  const normalized = normalizeStore(store);
+  const next = normalizeStore(store);
 
   let owedToMe = 0;
   let iOwe = 0;
+  let monthIncome = 0;
+  let monthExpense = 0;
+  let yearIncome = 0;
+  let yearExpense = 0;
 
-  normalized.people.forEach((person) => {
-    if (person.relation === "they_owe_me") {
-      owedToMe += Number(person.balance);
-    } else {
-      iOwe += Number(person.balance);
-    }
+  const currentYear = new Date().getFullYear();
+
+  next.debts.forEach((item) => {
+    if (item.relation === "they_owe_me") owedToMe += Number(item.amount || 0);
+    else iOwe += Number(item.amount || 0);
+  });
+
+  next.incomes.forEach((item) => {
+    const amount = Number(item.amount || 0);
+    const date = new Date(item.date || item.createdAt);
+    if (date.getFullYear() === currentYear) yearIncome += amount;
+    if (matchMonthYear(item.date || item.createdAt)) monthIncome += amount;
+  });
+
+  next.expenses.forEach((item) => {
+    const amount = Number(item.amount || 0);
+    const date = new Date(item.date || item.createdAt);
+    if (date.getFullYear() === currentYear) yearExpense += amount;
+    if (matchMonthYear(item.date || item.createdAt)) monthExpense += amount;
+  });
+
+  next.salaries.forEach((item) => {
+    const amount = Number(item.amount || 0);
+    const date = new Date(item.date || item.createdAt);
+    if (date.getFullYear() === currentYear) yearExpense += amount;
+    if (matchMonthYear(item.date || item.createdAt)) monthExpense += amount;
+  });
+
+  next.bills.forEach((item) => {
+    const amount = Number(item.amount || 0);
+    const date = new Date(item.dueDate || item.createdAt);
+    if (date.getFullYear() === currentYear) yearExpense += amount;
+    if (matchMonthYear(item.dueDate || item.createdAt)) monthExpense += amount;
   });
 
   return {
     owedToMe,
     iOwe,
-    net: owedToMe - iOwe,
-    personCount: normalized.people.length
+    monthIncome,
+    monthExpense,
+    yearIncome,
+    yearExpense,
+    net: (monthIncome + owedToMe) - (monthExpense + iOwe)
   };
 }
 
-export function getUpcomingNotifications(store) {
-  const normalized = normalizeStore(store);
+export function getNotifications(store) {
+  const next = normalizeStore(store);
+  const list = [];
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setHours(0,0,0,0);
 
-  return normalized.people
-    .filter((person) => person.dueDate)
-    .map((person) => {
-      const date = new Date(person.dueDate);
-      date.setHours(0, 0, 0, 0);
-
-      const diffDays = Math.round((date - today) / (1000 * 60 * 60 * 24));
-
-      return {
-        person,
-        diffDays
-      };
-    })
-    .filter((item) => item.diffDays <= 3)
-    .sort((a, b) => a.diffDays - b.diffDays);
-}
-
-export function exportStoreAsJson(store) {
-  return JSON.stringify(normalizeStore(store), null, 2);
-}
-
-export function exportStoreAsCsv(store) {
-  const normalized = normalizeStore(store);
-  const header = "Ad,Durum,Bakiye,Vade,Not\n";
-
-  const rows = normalized.people.map((person) => {
-    const relationText = person.relation === "they_owe_me" ? "Bana Borçlu" : "Ben Borçluyum";
-    const safeNote = (person.note || "").replace(/,/g, " ");
-    return `${person.name},${relationText},${person.balance},${person.dueDate || ""},${safeNote}`;
+  next.bills.forEach((item) => {
+    if (!item.dueDate || item.paid) return;
+    const d = new Date(item.dueDate);
+    d.setHours(0,0,0,0);
+    const diff = Math.round((d - today) / (1000*60*60*24));
+    if (diff <= 3) {
+      list.push({
+        text: `${item.title} faturası ${diff < 0 ? Math.abs(diff) + " gün gecikti" : diff === 0 ? "bugün son gün" : diff + " gün kaldı"}`
+      });
+    }
   });
 
-  return header + rows.join("\n");
-      }
+  next.salaries.forEach((item) => {
+    if (!item.date || item.paid) return;
+    const d = new Date(item.date);
+    d.setHours(0,0,0,0);
+    const diff = Math.round((d - today) / (1000*60*60*24));
+    if (diff <= 3) {
+      list.push({
+        text: `${item.name} maaşı ${diff < 0 ? Math.abs(diff) + " gün gecikti" : diff === 0 ? "bugün ödenecek" : diff + " gün kaldı"}`
+      });
+    }
+  });
+
+  return list;
+}
+
+export function exportJson(store) {
+  return JSON.stringify(normalizeStore(store), null, 2);
+}
