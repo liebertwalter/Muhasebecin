@@ -21,97 +21,123 @@
   <script src="voice.js"></script>
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">Kişisel muhasebe</p>
-        <h1>Muhasebecin</h1>
-      </div>
-      <button class="icon-btn" onclick="listeyiGuncelle()" title="Yenile">
-        <i data-lucide="refresh-cw"></i>
-      </button>
-    </header>
+  <div class="phone-frame">
+    <div class="app-bg"></div>
 
-    <section class="hero-card">
-      <div class="hero-left">
-        <div class="hero-icon">
-          <i data-lucide="wallet"></i>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="top-user">
+          <div class="avatar-wrap">
+            <div class="avatar">P</div>
+            <span class="online-dot"></span>
+          </div>
         </div>
-        <div>
-          <p class="muted">Toplam Borç</p>
-          <div class="toplam">₺ <span id="toplam">0</span></div>
+
+        <div class="top-title">
+          <p class="mini-title">Kişisel Muhasebe</p>
+          <h1>Muhasebecin</h1>
+          <p class="sub-title">Postal Dijital tarafından oluşturuldu</p>
         </div>
-      </div>
-      <button class="primary-btn mic-btn" onclick="sesliKomutBaslat()">
-        <i data-lucide="mic"></i>
-        <span>Sesli Komut</span>
-      </button>
-    </section>
 
-    <section class="panel">
-      <div class="panel-title">
-        <i data-lucide="user-plus"></i>
-        <span>Yeni Kişi</span>
-      </div>
-
-      <div class="input-group">
-        <input id="isim" type="text" placeholder="Kişi adı gir" />
-        <button class="primary-btn" onclick="yeniKisi()">
-          <i data-lucide="plus"></i>
-          <span>Kişi Ekle</span>
+        <button class="bell-btn" type="button">
+          <i data-lucide="bell"></i>
+          <span class="bell-badge">2</span>
         </button>
-      </div>
-    </section>
+      </header>
 
-    <section class="panel">
-      <div class="panel-title">
-        <i data-lucide="search"></i>
-        <span>Ara ve İşlemler</span>
-      </div>
+      <section class="summary-card glass-card">
+        <div class="summary-left">
+          <div class="wallet-box">
+            <i data-lucide="wallet"></i>
+          </div>
 
-      <input
-        id="arama"
-        class="search"
-        type="text"
-        placeholder="Kişi ara..."
-        oninput="aramaYap()"
-      />
+          <div>
+            <p class="card-label">Toplam Borç</p>
+            <div class="summary-price">₺ <span id="toplam">0</span></div>
+          </div>
+        </div>
 
-      <div class="actions-grid">
-        <button class="secondary-btn" onclick="csvIndir()">
-          <i data-lucide="file-down"></i>
-          <span>CSV İndir</span>
+        <button class="voice-card-btn" onclick="sesliKomutBaslat()">
+          <i data-lucide="mic"></i>
+          <div>
+            <span>Sesli Komut</span>
+            <small>Komut ver</small>
+          </div>
         </button>
+      </section>
 
-        <button class="secondary-btn" onclick="jsonYedek()">
-          <i data-lucide="download"></i>
-          <span>Yedek İndir</span>
-        </button>
+      <section class="search-card glass-card">
+        <div class="search-input-wrap">
+          <i data-lucide="search"></i>
+          <input
+            id="arama"
+            type="text"
+            placeholder="Kişi ara..."
+            oninput="aramaYap()"
+          />
+        </div>
+      </section>
 
-        <button class="secondary-btn" onclick="yedekYukleDosyaSec()">
-          <i data-lucide="upload"></i>
-          <span>Yedek Yükle</span>
-        </button>
-      </div>
-    </section>
+      <section class="add-card glass-card">
+        <div class="section-head">
+          <span>Yeni Kişi Ekle</span>
+        </div>
 
-    <section class="panel">
-      <div class="panel-title">
+        <div class="add-row">
+          <input id="isim" type="text" placeholder="Kişi Adı" />
+          <button class="add-main-btn" onclick="yeniKisi()">
+            Ekle
+          </button>
+        </div>
+      </section>
+
+      <section class="people-section">
+        <div class="section-title-line">
+          <div class="section-title-left">
+            <i data-lucide="briefcase"></i>
+            <span>Kişiler</span>
+          </div>
+          <div class="title-line"></div>
+        </div>
+
+        <div id="liste"></div>
+      </section>
+
+      <section class="chart-card glass-card">
+        <div class="section-head">
+          <span>Borç Grafiği</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="grafik"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav glass-card">
+      <button class="nav-item active">
         <i data-lucide="users"></i>
         <span>Kişiler</span>
-      </div>
-      <div id="liste"></div>
-    </section>
+      </button>
 
-    <section class="panel">
-      <div class="panel-title">
+      <button class="nav-item">
         <i data-lucide="bar-chart-3"></i>
-        <span>Grafik</span>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="grafik"></canvas>
-      </div>
-    </section>
+        <span>Raporlar</span>
+      </button>
+
+      <button class="nav-center-btn" onclick="yeniKisi()">
+        <i data-lucide="plus"></i>
+      </button>
+
+      <button class="nav-item" onclick="jsonYedek()">
+        <i data-lucide="database-backup"></i>
+        <span>Yedekle</span>
+      </button>
+
+      <button class="nav-item">
+        <i data-lucide="settings"></i>
+        <span>Ayarlar</span>
+      </button>
+    </nav>
   </div>
 
   <script src="app.js"></script>
@@ -124,22 +150,11 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-      if (typeof lucide !== "undefined") {
-        lucide.createIcons();
-      }
-
-      if (typeof listeyiGuncelle === "function") {
-        listeyiGuncelle();
-      }
-
-      if (typeof grafikCiz === "function") {
-        grafikCiz();
-      }
-
-      if (typeof hatirlaticiKontrol === "function") {
-        hatirlaticiKontrol();
-      }
+      if (typeof lucide !== "undefined") lucide.createIcons();
+      if (typeof listeyiGuncelle === "function") listeyiGuncelle();
+      if (typeof grafikCiz === "function") grafikCiz();
+      if (typeof hatirlaticiKontrol === "function") hatirlaticiKontrol();
     });
   </script>
 </body>
-  </html>
+</html>
