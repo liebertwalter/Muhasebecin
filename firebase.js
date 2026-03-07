@@ -98,11 +98,17 @@ window.firebaseCloud = {
 function authModalHTML() {
   return `
     <div id="authOverlay" style="
-      position:fixed; inset:0; z-index:9999;
-      background:rgba(2,6,23,.78);
-      backdrop-filter:blur(12px);
-      display:flex; align-items:center; justify-content:center;
-      padding:18px;">
+      position:fixed;
+      inset:0;
+      z-index:99999;
+      background:rgba(2,6,23,.82);
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    ">
       <div style="
         width:min(100%,420px);
         background:linear-gradient(180deg, rgba(72,88,152,.45), rgba(34,45,88,.45));
@@ -110,55 +116,115 @@ function authModalHTML() {
         border-radius:28px;
         padding:20px;
         color:#fff;
-        box-shadow:0 20px 60px rgba(0,0,0,.45);">
+        box-shadow:0 20px 60px rgba(0,0,0,.45);
+      ">
         <div style="text-align:center; margin-bottom:16px;">
           <div style="
-            width:64px; height:64px; margin:0 auto 12px;
+            width:64px;
+            height:64px;
+            margin:0 auto 12px;
             border-radius:20px;
             background:linear-gradient(135deg,#2f7cff,#1458f4);
-            display:flex; align-items:center; justify-content:center;
-            font-size:28px; font-weight:800;">M</div>
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:28px;
+            font-weight:800;
+          ">M</div>
+
           <div style="font-size:28px; font-weight:900;">Muhasebecin</div>
-          <div style="font-size:13px; color:#c7d2fe; margin-top:6px;">Hesabına giriş yap veya kayıt ol</div>
+          <div style="font-size:13px; color:#c7d2fe; margin-top:6px;">
+            Hesabına giriş yap veya kayıt ol
+          </div>
         </div>
 
         <div style="display:flex; gap:8px; margin-bottom:14px;">
           <button id="tabLogin" style="
-            flex:1; border:none; border-radius:14px; padding:12px;
-            background:#2563eb; color:#fff; font-weight:800;">Giriş Yap</button>
+            flex:1;
+            border:none;
+            border-radius:14px;
+            padding:12px;
+            background:#2563eb;
+            color:#fff;
+            font-weight:800;
+          ">Giriş Yap</button>
 
           <button id="tabRegister" style="
-            flex:1; border:none; border-radius:14px; padding:12px;
-            background:rgba(255,255,255,.08); color:#fff; font-weight:800;">Kayıt Ol</button>
+            flex:1;
+            border:none;
+            border-radius:14px;
+            padding:12px;
+            background:rgba(255,255,255,.08);
+            color:#fff;
+            font-weight:800;
+          ">Kayıt Ol</button>
         </div>
 
         <div id="registerFields" style="display:none;">
           <input id="authUsername" placeholder="Kullanıcı adı" style="
-            width:100%; margin-bottom:10px; padding:14px 16px; border:none; outline:none;
-            border-radius:16px; background:rgba(255,255,255,.08); color:#fff;">
+            width:100%;
+            margin-bottom:10px;
+            padding:14px 16px;
+            border:none;
+            outline:none;
+            border-radius:16px;
+            background:rgba(255,255,255,.08);
+            color:#fff;
+          ">
         </div>
 
         <input id="authLoginValue" placeholder="E-posta veya kullanıcı adı" style="
-          width:100%; margin-bottom:10px; padding:14px 16px; border:none; outline:none;
-          border-radius:16px; background:rgba(255,255,255,.08); color:#fff;">
+          width:100%;
+          margin-bottom:10px;
+          padding:14px 16px;
+          border:none;
+          outline:none;
+          border-radius:16px;
+          background:rgba(255,255,255,.08);
+          color:#fff;
+        ">
 
         <input id="authEmail" placeholder="E-posta (kayıt için)" style="
           display:none;
-          width:100%; margin-bottom:10px; padding:14px 16px; border:none; outline:none;
-          border-radius:16px; background:rgba(255,255,255,.08); color:#fff;">
+          width:100%;
+          margin-bottom:10px;
+          padding:14px 16px;
+          border:none;
+          outline:none;
+          border-radius:16px;
+          background:rgba(255,255,255,.08);
+          color:#fff;
+        ">
 
         <input id="authPassword" type="password" placeholder="Şifre" style="
-          width:100%; margin-bottom:10px; padding:14px 16px; border:none; outline:none;
-          border-radius:16px; background:rgba(255,255,255,.08); color:#fff;">
+          width:100%;
+          margin-bottom:10px;
+          padding:14px 16px;
+          border:none;
+          outline:none;
+          border-radius:16px;
+          background:rgba(255,255,255,.08);
+          color:#fff;
+        ">
 
         <button id="authSubmitBtn" style="
-          width:100%; border:none; border-radius:16px; padding:14px;
-          background:linear-gradient(135deg,#3e8dff,#1556f0); color:white;
-          font-weight:900; font-size:16px;">Giriş Yap</button>
+          width:100%;
+          border:none;
+          border-radius:16px;
+          padding:14px;
+          background:linear-gradient(135deg,#3e8dff,#1556f0);
+          color:white;
+          font-weight:900;
+          font-size:16px;
+        ">Giriş Yap</button>
 
         <div id="authMessage" style="
-          margin-top:12px; font-size:13px; color:#dbeafe; text-align:center;
-          min-height:18px;"></div>
+          margin-top:12px;
+          font-size:13px;
+          color:#dbeafe;
+          text-align:center;
+          min-height:18px;
+        "></div>
       </div>
     </div>
   `;
@@ -179,6 +245,7 @@ function switchAuthTab(mode) {
   document.getElementById("authSubmitBtn").innerText = isRegister ? "Kayıt Ol" : "Giriş Yap";
   document.getElementById("tabLogin").style.background = isRegister ? "rgba(255,255,255,.08)" : "#2563eb";
   document.getElementById("tabRegister").style.background = isRegister ? "#2563eb" : "rgba(255,255,255,.08)";
+
   document.getElementById("authOverlay").dataset.mode = mode;
   setAuthMessage("");
 }
@@ -227,6 +294,17 @@ function buildAuthUI() {
   switchAuthTab("login");
 }
 
+function forceShowLogin() {
+  buildAuthUI();
+  const overlay = document.getElementById("authOverlay");
+  if (overlay && !window.firebaseCloud.currentUser) {
+    overlay.style.display = "flex";
+  }
+}
+
+window.addEventListener("DOMContentLoaded", forceShowLogin);
+window.addEventListener("load", forceShowLogin);
+
 onAuthStateChanged(auth, async (user) => {
   buildAuthUI();
 
@@ -234,9 +312,24 @@ onAuthStateChanged(auth, async (user) => {
 
   if (user) {
     window.firebaseCloud.currentUser = user;
+
     if (overlay) overlay.style.display = "none";
+
+    const cloudData = await window.firebaseCloud.loadCloudData(user.uid);
+    localStorage.setItem("muhasebecin_db", JSON.stringify(cloudData));
+
+    if (typeof listeyiGuncelle === "function") {
+      await listeyiGuncelle();
+    }
+
+    if (typeof grafikCiz === "function") {
+      grafikCiz();
+    }
   } else {
     window.firebaseCloud.currentUser = null;
-    if (overlay) overlay.style.display = "flex";
+
+    if (overlay) {
+      overlay.style.display = "flex";
+    }
   }
 });
