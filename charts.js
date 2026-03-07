@@ -1,36 +1,24 @@
-let muhasebeChart = null;
+let debtChartInstance = null;
 
-function grafikVerisiHazirla() {
-  const kisiler = tumKisiler();
-  const isimler = [];
-  const borclar = [];
-
-  kisiler.forEach((kisi) => {
-    isimler.push(kisi.isim);
-    borclar.push(kisi.bakiye);
-  });
-
-  return { isimler, borclar };
-}
-
-function grafikCiz() {
-  const canvas = document.getElementById("grafik");
+export function renderDebtChart(canvas, store) {
   if (!canvas || typeof Chart === "undefined") return;
 
-  const veri = grafikVerisiHazirla();
+  const people = store.people || [];
+  const labels = people.map((p) => p.name);
+  const values = people.map((p) => p.balance);
 
-  if (muhasebeChart) {
-    muhasebeChart.destroy();
+  if (debtChartInstance) {
+    debtChartInstance.destroy();
   }
 
-  muhasebeChart = new Chart(canvas, {
+  debtChartInstance = new Chart(canvas, {
     type: "bar",
     data: {
-      labels: veri.isimler,
+      labels,
       datasets: [
         {
           label: "Borçlar",
-          data: veri.borclar,
+          data: values,
           borderWidth: 0,
           borderRadius: 12
         }
@@ -40,9 +28,7 @@ function grafikCiz() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: false
-        }
+        legend: { display: false }
       },
       scales: {
         x: {
