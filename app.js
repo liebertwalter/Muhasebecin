@@ -13,129 +13,33 @@ import {
   normalizeStore,
   loadLocalStore,
   saveLocalStore,
-  addPersonRecord,
-  addTransaction,
-  recordPayment,
-  toggleRelation,
-  updateDueDate,
-  deletePerson,
+  addDebt,
+  addIncome,
+  addExpense,
+  addBill,
+  addSalary,
+  toggleBillPaid,
+  toggleSalaryPaid,
+  deleteDebt,
+  deleteIncome,
+  deleteExpense,
+  deleteBill,
+  deleteSalary,
   computeSummary,
-  getUpcomingNotifications,
-  exportStoreAsJson,
-  exportStoreAsCsv
+  getNotifications,
+  exportJson
 } from "./database.js";
 
-import { renderDebtChart } from "./charts.js";
-
+let chartInstance = null;
+let store = createEmptyStore();
 let currentUser = null;
 let currentProfile = null;
-let store = createEmptyStore();
 let authMode = "login";
 
 const $ = (id) => document.getElementById(id);
 
-const authOverlay = $("authOverlay");
-const appRoot = $("appRoot");
-
-const loginTabBtn = $("loginTabBtn");
-const registerTabBtn = $("registerTabBtn");
-const registerExtraFields = $("registerExtraFields");
-const authLoginValue = $("authLoginValue");
-const authEmail = $("authEmail");
-const authPassword = $("authPassword");
-const registerUsername = $("registerUsername");
-const authSubmitBtn = $("authSubmitBtn");
-const authMessage = $("authMessage");
-
-const avatarCircle = $("avatarCircle");
-const netTotal = $("netTotal");
-const owedToMeTotal = $("owedToMeTotal");
-const iOweTotal = $("iOweTotal");
-const summaryMini = $("summaryMini");
-const searchInput = $("searchInput");
-
-const personNameInput = $("personNameInput");
-const amountInput = $("amountInput");
-const relationSelect = $("relationSelect");
-const dueDateInput = $("dueDateInput");
-const noteInput = $("noteInput");
-
-const addPersonBtn = $("addPersonBtn");
-const clearFormBtn = $("clearFormBtn");
-const peopleList = $("peopleList");
-const debtChart = $("debtChart");
-const reportSummary = $("reportSummary");
-
-const notificationBtn = $("notificationBtn");
-const notificationBadge = $("notificationBadge");
-const notificationDrawer = $("notificationDrawer");
-const closeDrawerBtn = $("closeDrawerBtn");
-const notificationList = $("notificationList");
-
-const exportJsonBtn = $("exportJsonBtn");
-const exportCsvBtn = $("exportCsvBtn");
-const importJsonBtn = $("importJsonBtn");
-const importFileInput = $("importFileInput");
-
-const requestNotificationBtn = $("requestNotificationBtn");
-const testNotificationBtn = $("testNotificationBtn");
-const toggleThemeBtn = $("toggleThemeBtn");
-const logoutBtn = $("logoutBtn");
-const voiceBtn = $("voiceBtn");
-const navAddBtn = $("navAddBtn");
-
-function setAuthMode(mode) {
-  authMode = mode;
-
-  const isRegister = mode === "register";
-  loginTabBtn.classList.toggle("active", !isRegister);
-  registerTabBtn.classList.toggle("active", isRegister);
-
-  registerExtraFields.classList.toggle("hidden", !isRegister);
-  authEmail.classList.toggle("hidden", !isRegister);
-  authLoginValue.classList.toggle("hidden", isRegister);
-
-  authSubmitBtn.textContent = isRegister ? "Kayıt Ol" : "Giriş Yap";
-  authMessage.textContent = "";
-}
-
-function setAuthMessage(message) {
-  authMessage.textContent = message;
-}
-
-async function handleAuthSubmit() {
-  try {
-    if (authMode === "register") {
-      const username = registerUsername.value.trim();
-      const email = authEmail.value.trim();
-      const password = authPassword.value.trim();
-
-      if (!username || !email || !password) {
-        setAuthMessage("Tüm alanları doldur.");
-        return;
-      }
-
-      await registerUser(username, email, password);
-      setAuthMessage("Kayıt başarılı, giriş yapılıyor...");
-    } else {
-      const loginValue = authLoginValue.value.trim();
-      const password = authPassword.value.trim();
-
-      if (!loginValue || !password) {
-        setAuthMessage("Giriş bilgilerini doldur.");
-        return;
-      }
-
-      await loginUser(loginValue, password);
-      setAuthMessage("Giriş başarılı.");
-    }
-  } catch (error) {
-    setAuthMessage(error.message || "Bir hata oluştu.");
-  }
-}
-
-function applyTheme() {
-  document.body.classList.toggle("light", store.settings.theme === "light");
+function tl(v) {
+  return Number(v || 0).toLocaleString("tr-TR");
 }
 
 async function persistStore() {
@@ -145,299 +49,478 @@ async function persistStore() {
   }
 }
 
-function formatCurrency(value) {
-  return Number(value).toLocaleString("tr-TR");
+function setAuthMode(mode) {
+  authMode = mode;
+  $("loginTabBtn").classList.toggle("active", mode === "login");
+  $("registerTabBtn").classList.toggle("active", mode === "register");
+  $("registerFields").classList.toggle("hidden", mode !== "register");
+  $("authEmail").classList.toggle("hidden", mode !== "register");
+  $("authLoginValue").classList.toggle("hidden", mode === "register");
+  $("authSubmitBtn").textContent = mode === "register" ? "Kayıt Ol" : "Giriş Yap";
+  $("authMessage").textContent = "";
 }
 
-function relationLabel(person) {
-  return person.relation === "they_owe_me" ? "Bana borçlu" : "Ben borçluyum";
+async function handleAuthSubmit() {
+  try {
+    if (authMode === "register") {
+      const username = $("registerUsername").value.trim();
+      const email = $("authEmail").value.trim();
+      const password = $("authPassword").value.trim();
+
+      if (!username || !email || !password) {
+        $("authMessage").textContent = "Tüm alanları doldur.";
+        return;
+      }
+
+      await registerUser(username, email, password);
+      $("authMessage").textContent = "Kayıt başarılı.";
+    } else {
+      const loginValue = $("authLoginValue").value.trim();
+      const password = $("authPassword").value.trim();
+
+      if (!loginValue || !password) {
+        $("authMessage").textContent = "Bilgileri doldur.";
+        return;
+      }
+
+      await loginUser(loginValue, password);
+      $("authMessage").textContent = "Giriş başarılı.";
+    }
+  } catch (e) {
+    $("authMessage").textContent = e.message || "Bir hata oluştu.";
+  }
 }
 
-function relationBadgeClass(person) {
-  return person.relation === "they_owe_me" ? "positive" : "negative";
+function showApp() {
+  $("authOverlay").classList.add("hidden");
+  $("appRoot").classList.remove("hidden");
+}
+
+function showAuth() {
+  $("authOverlay").classList.remove("hidden");
+  $("appRoot").classList.add("hidden");
+}
+
+function applyTheme() {
+  document.body.classList.toggle("light", store.settings.theme === "light");
 }
 
 function renderSummary() {
-  const summary = computeSummary(store);
-
-  netTotal.textContent = formatCurrency(summary.net);
-  owedToMeTotal.textContent = formatCurrency(summary.owedToMe);
-  iOweTotal.textContent = formatCurrency(summary.iOwe);
-
-  summaryMini.textContent = `${summary.personCount} kişi kayıtlı`;
-
-  reportSummary.innerHTML = `
-    <div class="report-line"><span>Bana borçlu olan toplam</span><strong>₺ ${formatCurrency(summary.owedToMe)}</strong></div>
-    <div class="report-line"><span>Benim borçlu olduğum toplam</span><strong>₺ ${formatCurrency(summary.iOwe)}</strong></div>
-    <div class="report-line"><span>Net durum</span><strong>₺ ${formatCurrency(summary.net)}</strong></div>
-    <div class="report-line"><span>Kişi sayısı</span><strong>${summary.personCount}</strong></div>
-  `;
+  const s = computeSummary(store);
+  $("netTotal").textContent = tl(s.net);
+  $("monthIncome").textContent = tl(s.monthIncome);
+  $("monthExpense").textContent = tl(s.monthExpense);
+  $("owedToMeTotal").textContent = tl(s.owedToMe);
+  $("iOweTotal").textContent = tl(s.iOwe);
+  $("summaryMini").textContent = "Aylık ve yıllık veriler otomatik hesaplanır";
 }
 
 function renderNotifications() {
-  const items = getUpcomingNotifications(store);
+  const list = getNotifications(store);
 
-  if (items.length === 0) {
-    notificationList.innerHTML = `<div class="empty-state">Yaklaşan bir hatırlatma yok.</div>`;
-    notificationBadge.classList.add("hidden");
+  if (!list.length) {
+    $("notificationList").innerHTML = `<div class="empty-state">Bildirim yok.</div>`;
+    $("notificationBadge").classList.add("hidden");
     return;
   }
 
-  notificationBadge.textContent = items.length;
-  notificationBadge.classList.remove("hidden");
+  $("notificationBadge").textContent = list.length;
+  $("notificationBadge").classList.remove("hidden");
 
-  notificationList.innerHTML = items.map(({ person, diffDays }) => {
-    let status = "";
+  $("notificationList").innerHTML = list
+    .map((item) => `<div class="notification-item">${item.text}</div>`)
+    .join("");
+}
 
-    if (diffDays < 0) {
-      status = `${Math.abs(diffDays)} gün gecikti`;
-    } else if (diffDays === 0) {
-      status = "Bugün vade günü";
-    } else {
-      status = `${diffDays} gün kaldı`;
-    }
-
-    return `
-      <div class="notification-item">
-        <strong>${person.name}</strong><br>
-        ${relationLabel(person)} — ₺ ${formatCurrency(person.balance)}<br>
-        <small>${status}</small>
+function cardHtml(title, badge, meta, actions, letter = "K") {
+  return `
+    <div class="glass-card record-card">
+      <div class="record-top">
+        <div class="record-left">
+          <div class="record-avatar">${letter}</div>
+          <div>
+            <div class="record-name">${title}</div>
+            ${badge}
+          </div>
+        </div>
       </div>
+      <div class="record-meta">${meta}</div>
+      <div class="record-actions">${actions}</div>
+    </div>
+  `;
+}
+
+function renderDebts() {
+  const q = $("searchInput").value.trim().toLowerCase();
+  const items = store.debts.filter((x) => x.name.toLowerCase().includes(q));
+
+  if (!items.length) {
+    $("debtsList").innerHTML = `<div class="glass-card empty-state">Borç kaydı yok.</div>`;
+    return;
+  }
+
+  $("debtsList").innerHTML = items.map((item) => {
+    const badge = item.relation === "they_owe_me"
+      ? `<div class="record-badge badge-positive">Bana borçlu — ₺ ${tl(item.amount)}</div>`
+      : `<div class="record-badge badge-negative">Ben borçluyum — ₺ ${tl(item.amount)}</div>`;
+
+    const meta = `${item.dueDate ? "Vade: " + item.dueDate + " • " : ""}${item.note || "Not yok"}`;
+
+    const actions = `
+      <button class="action-btn danger" data-type="debt" data-id="${item.id}" data-action="delete">Sil</button>
     `;
+
+    return cardHtml(item.name, badge, meta, actions, item.name.charAt(0).toUpperCase());
   }).join("");
 }
 
-function renderPeople() {
-  const search = searchInput.value.trim().toLowerCase();
+function renderIncome() {
+  const q = $("searchInput").value.trim().toLowerCase();
+  const items = store.incomes.filter((x) => x.title.toLowerCase().includes(q));
 
-  const filtered = store.people.filter((person) =>
-    person.name.toLowerCase().includes(search)
-  );
-
-  if (filtered.length === 0) {
-    peopleList.innerHTML = `<div class="glass-card empty-state">Kayıt bulunamadı.</div>`;
+  if (!items.length) {
+    $("incomeList").innerHTML = `<div class="glass-card empty-state">Gelir kaydı yok.</div>`;
     return;
   }
 
-  peopleList.innerHTML = filtered.map((person) => {
-    const history = [...person.history].reverse().slice(0, 4);
-
-    return `
-      <div class="glass-card person-card">
-        <div class="person-top">
-          <div class="person-left">
-            <div class="person-avatar">${person.name.charAt(0).toUpperCase()}</div>
-            <div>
-              <div class="person-name">${person.name}</div>
-              <div class="person-badge ${relationBadgeClass(person)}">
-                ${relationLabel(person)} — ₺ ${formatCurrency(person.balance)}
-              </div>
-            </div>
-          </div>
-
-          <button class="person-menu" type="button" data-action="detail" data-id="${person.id}">
-            <i data-lucide="more-horizontal"></i>
-          </button>
-        </div>
-
-        <div class="person-meta">
-          ${person.dueDate ? `Vade: ${person.dueDate}` : "Vade tarihi yok"}
-          ${person.note ? ` • ${person.note}` : ""}
-        </div>
-
-        <div class="hareket-list">
-          ${
-            history.length
-              ? history.map((item) => `
-                <div class="hareket ${item.type === "payment" ? "minus" : "plus"}">
-                  <span>${item.note} • ₺ ${formatCurrency(item.amount)} • ${item.at}</span>
-                </div>
-              `).join("")
-              : `<div class="hareket plus"><span>Henüz işlem yok</span></div>`
-          }
-        </div>
-
-        <div class="person-actions">
-          <button class="action-btn" type="button" data-action="add" data-id="${person.id}">
-            <i data-lucide="plus"></i><span>İşlem Ekle</span>
-          </button>
-          <button class="action-btn" type="button" data-action="pay" data-id="${person.id}">
-            <i data-lucide="banknote"></i><span>Ödeme Gir</span>
-          </button>
-          <button class="action-btn primary" type="button" data-action="toggle" data-id="${person.id}">
-            <i data-lucide="repeat"></i><span>Yön Değiştir</span>
-          </button>
-          <button class="action-btn warn" type="button" data-action="date" data-id="${person.id}">
-            <i data-lucide="calendar-days"></i><span>Vade</span>
-          </button>
-          <button class="action-btn danger" type="button" data-action="delete" data-id="${person.id}">
-            <i data-lucide="trash-2"></i><span>Sil</span>
-          </button>
-        </div>
-      </div>
-    `;
+  $("incomeList").innerHTML = items.map((item) => {
+    const badge = `<div class="record-badge badge-positive">Gelir — ₺ ${tl(item.amount)}</div>`;
+    const meta = `${item.date || ""} • ${item.category || "Kategori yok"} • ${item.note || "Not yok"}`;
+    const actions = `<button class="action-btn danger" data-type="income" data-id="${item.id}" data-action="delete">Sil</button>`;
+    return cardHtml(item.title, badge, meta, actions, "₺");
   }).join("");
+}
 
-  lucide.createIcons();
+function renderExpense() {
+  const q = $("searchInput").value.trim().toLowerCase();
+  const items = store.expenses.filter((x) => x.title.toLowerCase().includes(q));
+
+  if (!items.length) {
+    $("expenseList").innerHTML = `<div class="glass-card empty-state">Gider kaydı yok.</div>`;
+    return;
+  }
+
+  $("expenseList").innerHTML = items.map((item) => {
+    const badge = `<div class="record-badge badge-negative">Gider — ₺ ${tl(item.amount)}</div>`;
+    const meta = `${item.date || ""} • ${item.category || "Kategori yok"} • ${item.note || "Not yok"}`;
+    const actions = `<button class="action-btn danger" data-type="expense" data-id="${item.id}" data-action="delete">Sil</button>`;
+    return cardHtml(item.title, badge, meta, actions, "₺");
+  }).join("");
+}
+
+function renderBills() {
+  const q = $("searchInput").value.trim().toLowerCase();
+  const items = store.bills.filter((x) => x.title.toLowerCase().includes(q));
+
+  if (!items.length) {
+    $("billList").innerHTML = `<div class="glass-card empty-state">Fatura kaydı yok.</div>`;
+    return;
+  }
+
+  $("billList").innerHTML = items.map((item) => {
+    const badge = item.paid
+      ? `<div class="record-badge badge-positive">Ödendi — ₺ ${tl(item.amount)}</div>`
+      : `<div class="record-badge badge-negative">Bekliyor — ₺ ${tl(item.amount)}</div>`;
+
+    const meta = `${item.dueDate || ""} • ${item.category || "Kategori yok"} • ${item.note || "Not yok"}`;
+
+    const actions = `
+      <button class="action-btn primary" data-type="bill" data-id="${item.id}" data-action="toggle">${item.paid ? "Bekliyor Yap" : "Ödendi Yap"}</button>
+      <button class="action-btn danger" data-type="bill" data-id="${item.id}" data-action="delete">Sil</button>
+    `;
+
+    return cardHtml(item.title, badge, meta, actions, "F");
+  }).join("");
+}
+
+function renderSalaries() {
+  const q = $("searchInput").value.trim().toLowerCase();
+  const items = store.salaries.filter((x) => x.name.toLowerCase().includes(q));
+
+  if (!items.length) {
+    $("salaryList").innerHTML = `<div class="glass-card empty-state">Maaş kaydı yok.</div>`;
+    return;
+  }
+
+  $("salaryList").innerHTML = items.map((item) => {
+    const badge = item.paid
+      ? `<div class="record-badge badge-positive">Ödendi — ₺ ${tl(item.amount)}</div>`
+      : `<div class="record-badge badge-negative">Bekliyor — ₺ ${tl(item.amount)}</div>`;
+
+    const meta = `${item.date || ""} • ${item.role || "Pozisyon yok"} • ${item.note || "Not yok"}`;
+
+    const actions = `
+      <button class="action-btn primary" data-type="salary" data-id="${item.id}" data-action="toggle">${item.paid ? "Bekliyor Yap" : "Ödendi Yap"}</button>
+      <button class="action-btn danger" data-type="salary" data-id="${item.id}" data-action="delete">Sil</button>
+    `;
+
+    return cardHtml(item.name, badge, meta, actions, item.name.charAt(0).toUpperCase());
+  }).join("");
+}
+
+function renderReports() {
+  const s = computeSummary(store);
+
+  $("reportSummary").innerHTML = `
+    <div class="report-line"><span>Bu Ay Gelir</span><strong>₺ ${tl(s.monthIncome)}</strong></div>
+    <div class="report-line"><span>Bu Ay Gider</span><strong>₺ ${tl(s.monthExpense)}</strong></div>
+    <div class="report-line"><span>Bu Yıl Gelir</span><strong>₺ ${tl(s.yearIncome)}</strong></div>
+    <div class="report-line"><span>Bu Yıl Gider</span><strong>₺ ${tl(s.yearExpense)}</strong></div>
+    <div class="report-line"><span>Bana Borçlu</span><strong>₺ ${tl(s.owedToMe)}</strong></div>
+    <div class="report-line"><span>Ben Borçluyum</span><strong>₺ ${tl(s.iOwe)}</strong></div>
+    <div class="report-line"><span>Net Durum</span><strong>₺ ${tl(s.net)}</strong></div>
+  `;
+
+  const ctx = $("financeChart");
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Aylık Gelir", "Aylık Gider", "Yıllık Gelir", "Yıllık Gider"],
+      datasets: [{
+        label: "Özet",
+        data: [s.monthIncome, s.monthExpense, s.yearIncome, s.yearExpense],
+        borderWidth: 0,
+        borderRadius: 12
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#cbd5e1" },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { color: "#cbd5e1" },
+          grid: { color: "rgba(255,255,255,0.08)" }
+        }
+      }
+    }
+  });
 }
 
 function renderAll() {
   applyTheme();
   renderSummary();
-  renderPeople();
   renderNotifications();
-  renderDebtChart(debtChart, store);
+  renderDebts();
+  renderIncome();
+  renderExpense();
+  renderBills();
+  renderSalaries();
+  renderReports();
 
   if (currentProfile?.username) {
-    avatarCircle.textContent = currentProfile.username.charAt(0).toUpperCase();
+    $("avatarCircle").textContent = currentProfile.username.charAt(0).toUpperCase();
   } else if (currentUser?.email) {
-    avatarCircle.textContent = currentUser.email.charAt(0).toUpperCase();
+    $("avatarCircle").textContent = currentUser.email.charAt(0).toUpperCase();
   }
 
-  lucide.createIcons();
+  if (typeof lucide !== "undefined") lucide.createIcons();
 }
 
-function showApp() {
-  authOverlay.classList.add("hidden");
-  appRoot.classList.remove("hidden");
+function applyTheme() {
+  document.body.classList.toggle("light", store.settings.theme === "light");
 }
 
-function showAuth() {
-  authOverlay.classList.remove("hidden");
-  appRoot.classList.add("hidden");
-}
-
-async function initializeUser(user) {
+async function initUser(user) {
   currentUser = user;
   currentProfile = await loadProfile(user.uid);
-  const cloudStore = await loadCloudStore(user.uid);
-  store = normalizeStore(cloudStore);
+  store = normalizeStore(await loadCloudStore(user.uid));
   saveLocalStore(store);
   showApp();
   renderAll();
-  runDueNotifications();
 }
 
-function clearForm() {
-  personNameInput.value = "";
-  amountInput.value = "";
-  dueDateInput.value = "";
-  noteInput.value = "";
-  relationSelect.value = "they_owe_me";
+function switchTab(tab) {
+  document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach((btn) => btn.classList.remove("active"));
+
+  if (tab === "debts") $("debtsTab").classList.add("active");
+  if (tab === "income") $("incomeTab").classList.add("active");
+  if (tab === "expense") $("expenseTab").classList.add("active");
+  if (tab === "bills") $("billsTab").classList.add("active");
+  if (tab === "salary") $("salaryTab").classList.add("active");
+  if (tab === "reports") $("reportsTab").classList.add("active");
+  if (tab === "settings") $("settingsTab").classList.add("active");
+
+  document.querySelector(`.nav-item[data-tab="${tab}"]`)?.classList.add("active");
 }
 
-async function handleAddPerson() {
-  const name = personNameInput.value.trim();
-  const amount = Number(amountInput.value || 0);
-  const relation = relationSelect.value;
-  const dueDate = dueDateInput.value;
-  const note = noteInput.value.trim();
+function clearDebtForm() {
+  $("personNameInput").value = "";
+  $("debtAmountInput").value = "";
+  $("debtDueDateInput").value = "";
+  $("debtNoteInput").value = "";
+  $("relationSelect").value = "they_owe_me";
+}
+
+function clearIncomeForm() {
+  $("incomeTitleInput").value = "";
+  $("incomeAmountInput").value = "";
+  $("incomeDateInput").value = "";
+  $("incomeCategoryInput").value = "";
+  $("incomeNoteInput").value = "";
+}
+
+function clearExpenseForm() {
+  $("expenseTitleInput").value = "";
+  $("expenseAmountInput").value = "";
+  $("expenseDateInput").value = "";
+  $("expenseCategoryInput").value = "";
+  $("expenseNoteInput").value = "";
+}
+
+function clearBillForm() {
+  $("billTitleInput").value = "";
+  $("billAmountInput").value = "";
+  $("billDueDateInput").value = "";
+  $("billCategoryInput").value = "";
+  $("billNoteInput").value = "";
+}
+
+function clearSalaryForm() {
+  $("salaryNameInput").value = "";
+  $("salaryAmountInput").value = "";
+  $("salaryDateInput").value = "";
+  $("salaryRoleInput").value = "";
+  $("salaryNoteInput").value = "";
+}
+
+async function addDebtHandler() {
+  const name = $("personNameInput").value.trim();
+  const amount = Number($("debtAmountInput").value || 0);
 
   if (!name || amount <= 0) {
     alert("Kişi adı ve tutar gir.");
     return;
   }
 
-  store = addPersonRecord(store, { name, amount, relation, dueDate, note });
+  store = addDebt(store, {
+    name,
+    amount,
+    relation: $("relationSelect").value,
+    dueDate: $("debtDueDateInput").value,
+    note: $("debtNoteInput").value.trim()
+  });
+
   await persistStore();
-  clearForm();
+  clearDebtForm();
   renderAll();
 }
 
-async function handlePeopleActions(event) {
-  const button = event.target.closest("[data-action]");
-  if (!button) return;
+async function addIncomeHandler() {
+  const title = $("incomeTitleInput").value.trim();
+  const amount = Number($("incomeAmountInput").value || 0);
 
-  const action = button.dataset.action;
-  const personId = button.dataset.id;
-  const person = store.people.find((p) => p.id === personId);
-  if (!person) return;
-
-  if (action === "add") {
-    const value = prompt(`${person.name} için eklenecek tutar`);
-    if (!value) return;
-    const amount = Number(value);
-    if (amount <= 0) return;
-
-    const note = prompt("İşlem notu", "Borç eklendi") || "Borç eklendi";
-    store = addTransaction(store, personId, amount, note);
-    await persistStore();
-    renderAll();
+  if (!title || amount <= 0) {
+    alert("Gelir başlığı ve tutar gir.");
+    return;
   }
 
-  if (action === "pay") {
-    const value = prompt(`${person.name} için ödenen tutar`);
-    if (!value) return;
-    const amount = Number(value);
-    if (amount <= 0) return;
-
-    const note = prompt("Ödeme notu", "Ödeme girildi") || "Ödeme girildi";
-    store = recordPayment(store, personId, amount, note);
-    await persistStore();
-    renderAll();
-  }
-
-  if (action === "toggle") {
-    store = toggleRelation(store, personId);
-    await persistStore();
-    renderAll();
-  }
-
-  if (action === "date") {
-    const nextDate = prompt("Yeni vade tarihi (YYYY-MM-DD)", person.dueDate || "");
-    if (nextDate === null) return;
-
-    store = updateDueDate(store, personId, nextDate);
-    await persistStore();
-    renderAll();
-  }
-
-  if (action === "delete") {
-    const ok = confirm(`${person.name} silinsin mi?`);
-    if (!ok) return;
-
-    store = deletePerson(store, personId);
-    await persistStore();
-    renderAll();
-  }
-
-  if (action === "detail") {
-    alert(
-      `${person.name}\n\n` +
-      `Durum: ${relationLabel(person)}\n` +
-      `Bakiye: ₺ ${formatCurrency(person.balance)}\n` +
-      `Vade: ${person.dueDate || "Yok"}\n` +
-      `Not: ${person.note || "Yok"}\n` +
-      `İşlem sayısı: ${person.history.length}`
-    );
-  }
-}
-
-function switchTab(tabName) {
-  document.querySelectorAll(".tab-panel").forEach((panel) => {
-    panel.classList.remove("active");
+  store = addIncome(store, {
+    title,
+    amount,
+    date: $("incomeDateInput").value,
+    category: $("incomeCategoryInput").value.trim(),
+    note: $("incomeNoteInput").value.trim()
   });
 
-  document.querySelectorAll(".nav-item").forEach((btn) => {
-    btn.classList.remove("active");
-  });
-
-  if (tabName === "people") $("peopleTab").classList.add("active");
-  if (tabName === "reports") $("reportsTab").classList.add("active");
-  if (tabName === "backup") $("backupTab").classList.add("active");
-  if (tabName === "settings") $("settingsTab").classList.add("active");
-
-  document.querySelector(`.nav-item[data-tab="${tabName}"]`)?.classList.add("active");
+  await persistStore();
+  clearIncomeForm();
+  renderAll();
 }
 
-function downloadFile(filename, content, type) {
-  const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+async function addExpenseHandler() {
+  const title = $("expenseTitleInput").value.trim();
+  const amount = Number($("expenseAmountInput").value || 0);
+
+  if (!title || amount <= 0) {
+    alert("Gider başlığı ve tutar gir.");
+    return;
+  }
+
+  store = addExpense(store, {
+    title,
+    amount,
+    date: $("expenseDateInput").value,
+    category: $("expenseCategoryInput").value.trim(),
+    note: $("expenseNoteInput").value.trim()
+  });
+
+  await persistStore();
+  clearExpenseForm();
+  renderAll();
+}
+
+async function addBillHandler() {
+  const title = $("billTitleInput").value.trim();
+  const amount = Number($("billAmountInput").value || 0);
+
+  if (!title || amount <= 0) {
+    alert("Fatura adı ve tutar gir.");
+    return;
+  }
+
+  store = addBill(store, {
+    title,
+    amount,
+    dueDate: $("billDueDateInput").value,
+    category: $("billCategoryInput").value.trim(),
+    note: $("billNoteInput").value.trim()
+  });
+
+  await persistStore();
+  clearBillForm();
+  renderAll();
+}
+
+async function addSalaryHandler() {
+  const name = $("salaryNameInput").value.trim();
+  const amount = Number($("salaryAmountInput").value || 0);
+
+  if (!name || amount <= 0) {
+    alert("Eleman adı ve maaş gir.");
+    return;
+  }
+
+  store = addSalary(store, {
+    name,
+    amount,
+    date: $("salaryDateInput").value,
+    role: $("salaryRoleInput").value.trim(),
+    note: $("salaryNoteInput").value.trim()
+  });
+
+  await persistStore();
+  clearSalaryForm();
+  renderAll();
+}
+
+async function handleRecordActions(e) {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+
+  const type = btn.dataset.type;
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
+
+  if (type === "debt" && action === "delete") store = deleteDebt(store, id);
+  if (type === "income" && action === "delete") store = deleteIncome(store, id);
+  if (type === "expense" && action === "delete") store = deleteExpense(store, id);
+  if (type === "bill" && action === "delete") store = deleteBill(store, id);
+  if (type === "salary" && action === "delete") store = deleteSalary(store, id);
+  if (type === "bill" && action === "toggle") store = toggleBillPaid(store, id);
+  if (type === "salary" && action === "toggle") store = toggleSalaryPaid(store, id);
+
+  await persistStore();
+  renderAll();
 }
 
 async function requestNotificationPermission() {
@@ -446,16 +529,13 @@ async function requestNotificationPermission() {
     return;
   }
 
-  const result = await Notification.requestPermission();
-
-  store.settings.notifications = result === "granted";
+  const permission = await Notification.requestPermission();
+  store.settings.notifications = permission === "granted";
   await persistStore();
-  renderAll();
-
-  alert(result === "granted" ? "Bildirim izni verildi." : "Bildirim izni verilmedi.");
+  alert(permission === "granted" ? "Bildirim izni verildi." : "Bildirim izni verilmedi.");
 }
 
-function showTestNotification() {
+function testNotification() {
   if (!("Notification" in window) || Notification.permission !== "granted") {
     alert("Önce bildirim izni ver.");
     return;
@@ -466,86 +546,38 @@ function showTestNotification() {
   });
 }
 
-function runDueNotifications() {
-  if (!("Notification" in window)) return;
-  if (Notification.permission !== "granted") return;
-  if (!store.settings.notifications) return;
-
-  const items = getUpcomingNotifications(store);
-
-  items.forEach(({ person, diffDays }) => {
-    let body = "";
-
-    if (diffDays < 0) body = `${person.name} için vade geçti.`;
-    if (diffDays === 0) body = `${person.name} için vade bugün.`;
-    if (diffDays > 0) body = `${person.name} için ${diffDays} gün kaldı.`;
-
-    new Notification("Muhasebecin", { body });
-  });
-}
-
-function toggleTheme() {
+async function toggleThemeHandler() {
   store.settings.theme = store.settings.theme === "light" ? "dark" : "light";
-  persistStore();
+  await persistStore();
   renderAll();
 }
 
-function parseVoiceCommand(text) {
-  const command = text.toLowerCase().trim();
-  const amountMatch = command.match(/\d+/);
-  if (!amountMatch) {
-    alert("Tutar bulunamadı.");
-    return;
-  }
-
-  const amount = Number(amountMatch[0]);
-
-  let relation = "they_owe_me";
-  if (command.includes("ben borçluyum") || command.includes("ona borçluyum")) {
-    relation = "i_owe_them";
-  }
-  if (command.includes("bana borçlu")) {
-    relation = "they_owe_me";
-  }
-
-  const cleaned = command
-    .replace(/\d+/g, "")
-    .replace("bana borçlu", "")
-    .replace("ben borçluyum", "")
-    .replace("ona borçluyum", "")
-    .replace("ekle", "")
-    .replace("ödeme", "")
-    .replace("borç", "")
-    .replace("tl", "")
-    .trim();
-
-  if (!cleaned) {
-    alert("Kişi adı bulunamadı.");
-    return;
-  }
-
-  const name = cleaned
-    .split(" ")
-    .filter(Boolean)
-    .map((x) => x.charAt(0).toUpperCase() + x.slice(1))
-    .join(" ");
-
-  store = addPersonRecord(store, {
-    name,
-    amount,
-    relation,
-    dueDate: "",
-    note: "Sesli komut ile eklendi"
-  });
-
-  persistStore();
-  renderAll();
-  alert(`Sesli komut işlendi: ${name} / ₺ ${amount}`);
+function downloadJson() {
+  const blob = new Blob([exportJson(store)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "muhasebecin-backup.json";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
-function startVoiceCommand() {
+async function importJsonHandler(file) {
+  if (!file) return;
+  const text = await file.text();
+
+  try {
+    store = normalizeStore(JSON.parse(text));
+    await persistStore();
+    renderAll();
+    alert("Yedek yüklendi.");
+  } catch {
+    alert("Geçersiz JSON dosyası.");
+  }
+}
+
+function startVoice() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
   if (!SpeechRecognition) {
     alert("Bu tarayıcı sesli komutu desteklemiyor.");
     return;
@@ -558,104 +590,73 @@ function startVoiceCommand() {
 
   rec.onstart = () => alert("Dinliyorum...");
   rec.onerror = (e) => alert("Sesli komut hatası: " + e.error);
-  rec.onresult = (e) => {
-    const text = e.results[0][0].transcript;
-    parseVoiceCommand(text);
+  rec.onresult = async (e) => {
+    const text = e.results[0][0].transcript.toLowerCase();
+    const amountMatch = text.match(/\d+/);
+
+    if (!amountMatch) {
+      alert("Tutar bulunamadı.");
+      return;
+    }
+
+    const amount = Number(amountMatch[0]);
+    const name = text
+      .replace(/\d+/g, "")
+      .replace("bana borçlu", "")
+      .replace("ben borçluyum", "")
+      .replace("ekle", "")
+      .replace("tl", "")
+      .trim();
+
+    if (!name) {
+      alert("İsim bulunamadı.");
+      return;
+    }
+
+    const relation = text.includes("ben borçluyum") ? "i_owe_them" : "they_owe_me";
+
+    store = addDebt(store, {
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      amount,
+      relation,
+      dueDate: "",
+      note: "Sesli komut ile eklendi"
+    });
+
+    await persistStore();
+    renderAll();
+    alert("Sesli komut işlendi.");
   };
 
   rec.start();
 }
 
 function setupEvents() {
-  loginTabBtn.addEventListener("click", () => setAuthMode("login"));
-  registerTabBtn.addEventListener("click", () => setAuthMode("register"));
-  authSubmitBtn.addEventListener("click", handleAuthSubmit);
+  $("loginTabBtn").addEventListener("click", () => setAuthMode("login"));
+  $("registerTabBtn").addEventListener("click", () => setAuthMode("register"));
+  $("authSubmitBtn").addEventListener("click", handleAuthSubmit);
 
-  addPersonBtn.addEventListener("click", handleAddPerson);
-  clearFormBtn.addEventListener("click", clearForm);
-  searchInput.addEventListener("input", renderPeople);
-  peopleList.addEventListener("click", handlePeopleActions);
+  $("addDebtBtn").addEventListener("click", addDebtHandler);
+  $("clearDebtFormBtn").addEventListener("click", clearDebtForm);
 
-  notificationBtn.addEventListener("click", () => {
-    notificationDrawer.classList.remove("hidden");
-  });
+  $("addIncomeBtn").addEventListener("click", addIncomeHandler);
+  $("clearIncomeFormBtn").addEventListener("click", clearIncomeForm);
 
-  closeDrawerBtn.addEventListener("click", () => {
-    notificationDrawer.classList.add("hidden");
-  });
+  $("addExpenseBtn").addEventListener("click", addExpenseHandler);
+  $("clearExpenseFormBtn").addEventListener("click", clearExpenseForm);
 
-  notificationDrawer.addEventListener("click", (e) => {
-    if (e.target === notificationDrawer) {
-      notificationDrawer.classList.add("hidden");
-    }
-  });
+  $("addBillBtn").addEventListener("click", addBillHandler);
+  $("clearBillFormBtn").addEventListener("click", clearBillForm);
 
-  document.querySelectorAll(".nav-item").forEach((btn) => {
-    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
-  });
+  $("addSalaryBtn").addEventListener("click", addSalaryHandler);
+  $("clearSalaryFormBtn").addEventListener("click", clearSalaryForm);
 
-  navAddBtn.addEventListener("click", () => {
-    switchTab("people");
-    personNameInput.focus();
-  });
+  $("searchInput").addEventListener("input", renderAll);
 
-  exportJsonBtn.addEventListener("click", () => {
-    downloadFile("muhasebecin-backup.json", exportStoreAsJson(store), "application/json");
-  });
+  $("debtsList").addEventListener("click", handleRecordActions);
+  $("incomeList").addEventListener("click", handleRecordActions);
+  $("expenseList").addEventListener("click", handleRecordActions);
+  $("billList").addEventListener("click", handleRecordActions);
+  $("salaryList").addEventListener("click", handleRecordActions);
 
-  exportCsvBtn.addEventListener("click", () => {
-    downloadFile("muhasebecin.csv", exportStoreAsCsv(store), "text/csv");
-  });
-
-  importJsonBtn.addEventListener("click", () => importFileInput.click());
-
-  importFileInput.addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const text = await file.text();
-
-    try {
-      store = normalizeStore(JSON.parse(text));
-      await persistStore();
-      renderAll();
-      alert("Yedek yüklendi.");
-    } catch {
-      alert("Geçersiz yedek dosyası.");
-    }
-  });
-
-  requestNotificationBtn.addEventListener("click", requestNotificationPermission);
-  testNotificationBtn.addEventListener("click", showTestNotification);
-  toggleThemeBtn.addEventListener("click", toggleTheme);
-  logoutBtn.addEventListener("click", async () => {
-    await logoutUser();
-  });
-
-  voiceBtn.addEventListener("click", startVoiceCommand);
-}
-
-function initIcons() {
-  if (typeof lucide !== "undefined") {
-    lucide.createIcons();
-  }
-}
-
-function bootstrap() {
-  setupEvents();
-  initIcons();
-  setAuthMode("login");
-
-  observeAuth(async (user) => {
-    if (user) {
-      await initializeUser(user);
-    } else {
-      currentUser = null;
-      currentProfile = null;
-      store = loadLocalStore();
-      showAuth();
-    }
-  });
-}
-
-bootstrap();
+  document.que
