@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Muhasebecin</title>
-
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -13,32 +12,32 @@
   <div class="bg-blur bg-blur-1"></div>
   <div class="bg-blur bg-blur-2"></div>
 
-  <!-- AUTH -->
+  <!-- GİRİŞ / KAYIT -->
   <div id="authOverlay" class="overlay">
     <div class="auth-card">
       <div class="auth-logo">M</div>
-      <h1 class="auth-title">Muhasebecin</h1>
-      <p class="auth-subtitle">Postal Dijital tarafından oluşturuldu</p>
+      <div class="auth-title">Muhasebecin</div>
+      <div class="auth-subtitle">Postal Dijital tarafından oluşturuldu</div>
 
       <div class="auth-tabs">
         <button id="loginTabBtn" class="auth-tab active" type="button">Giriş Yap</button>
         <button id="registerTabBtn" class="auth-tab" type="button">Kayıt Ol</button>
       </div>
 
-      <div id="registerExtraFields" class="hidden">
-        <input id="registerUsername" class="input" placeholder="Kullanıcı adı" />
+      <div id="registerFields" class="hidden">
+        <input id="registerUsername" class="input auth-input" placeholder="Kullanıcı adı" />
       </div>
 
-      <input id="authLoginValue" class="input" placeholder="E-posta veya kullanıcı adı" />
-      <input id="authEmail" class="input hidden" placeholder="E-posta" />
-      <input id="authPassword" class="input" type="password" placeholder="Şifre" />
+      <input id="authLoginValue" class="input auth-input" placeholder="E-posta veya kullanıcı adı" />
+      <input id="authEmail" class="input auth-input hidden" placeholder="E-posta" />
+      <input id="authPassword" class="input auth-input" type="password" placeholder="Şifre" />
 
       <button id="authSubmitBtn" class="primary-btn" type="button">Giriş Yap</button>
       <div id="authMessage" class="auth-message"></div>
     </div>
   </div>
 
-  <!-- APP -->
+  <!-- UYGULAMA -->
   <div id="appRoot" class="app hidden">
     <header class="topbar">
       <div class="top-user">
@@ -46,12 +45,12 @@
       </div>
 
       <div class="top-title">
-        <div class="mini-title">Kişisel Muhasebe</div>
+        <div class="mini-title">Kişisel / Küçük İşletme Muhasebesi</div>
         <div class="main-title">Muhasebecin</div>
         <div class="sub-title">Postal Dijital tarafından oluşturuldu</div>
       </div>
 
-      <button id="notificationBtn" class="icon-button" type="button" title="Bildirimler">
+      <button id="notificationBtn" class="icon-button" type="button">
         <i data-lucide="bell"></i>
         <span id="notificationBadge" class="badge hidden">0</span>
       </button>
@@ -80,9 +79,20 @@
 
     <section class="mini-stats">
       <div class="mini-stat glass-card">
+        <div class="mini-stat-label">Bu Ay Gelir</div>
+        <div class="mini-stat-value">₺ <span id="monthIncome">0</span></div>
+      </div>
+
+      <div class="mini-stat glass-card">
+        <div class="mini-stat-label">Bu Ay Gider</div>
+        <div class="mini-stat-value">₺ <span id="monthExpense">0</span></div>
+      </div>
+
+      <div class="mini-stat glass-card">
         <div class="mini-stat-label">Bana Borçlu</div>
         <div class="mini-stat-value">₺ <span id="owedToMeTotal">0</span></div>
       </div>
+
       <div class="mini-stat glass-card">
         <div class="mini-stat-label">Ben Borçluyum</div>
         <div class="mini-stat-value">₺ <span id="iOweTotal">0</span></div>
@@ -92,17 +102,18 @@
     <section class="search-card glass-card">
       <div class="search-input-wrap">
         <i data-lucide="search"></i>
-        <input id="searchInput" type="text" placeholder="Kişi ara..." />
+        <input id="searchInput" type="text" placeholder="Kayıt ara..." />
       </div>
     </section>
 
-    <section id="peopleTab" class="tab-panel active">
+    <!-- BORÇLAR -->
+    <section id="debtsTab" class="tab-panel active">
       <section class="add-card glass-card">
-        <div class="section-head">Yeni Kişi / Borç Kaydı</div>
+        <div class="section-head">Borç Kaydı Ekle</div>
 
         <div class="form-grid">
           <input id="personNameInput" class="input dark" placeholder="Kişi adı" />
-          <input id="amountInput" class="input dark" type="number" placeholder="Tutar" />
+          <input id="debtAmountInput" class="input dark" type="number" placeholder="Tutar" />
         </div>
 
         <div class="form-grid">
@@ -110,68 +121,149 @@
             <option value="they_owe_me">Bu kişi bana borçlu</option>
             <option value="i_owe_them">Ben bu kişiye borçluyum</option>
           </select>
-          <input id="dueDateInput" class="input dark" type="date" />
+          <input id="debtDueDateInput" class="input dark" type="date" />
         </div>
 
-        <textarea id="noteInput" class="textarea dark" placeholder="Not (isteğe bağlı)"></textarea>
+        <textarea id="debtNoteInput" class="textarea dark" placeholder="Not"></textarea>
 
         <div class="action-row">
-          <button id="addPersonBtn" class="primary-btn" type="button">Kaydı Ekle</button>
-          <button id="clearFormBtn" class="secondary-btn" type="button">Temizle</button>
+          <button id="addDebtBtn" class="primary-btn" type="button">Borç Kaydı Ekle</button>
+          <button id="clearDebtFormBtn" class="secondary-btn" type="button">Temizle</button>
         </div>
       </section>
 
       <section class="people-section">
         <div class="section-title-line">
           <div class="section-title-left">
-            <i data-lucide="briefcase"></i>
-            <span>Kişiler</span>
+            <i data-lucide="users"></i>
+            <span>Borçlar</span>
           </div>
           <div class="title-line"></div>
         </div>
-
-        <div id="peopleList"></div>
+        <div id="debtsList"></div>
       </section>
     </section>
 
+    <!-- GELİR -->
+    <section id="incomeTab" class="tab-panel">
+      <section class="add-card glass-card">
+        <div class="section-head">Gelir Ekle</div>
+
+        <div class="form-grid">
+          <input id="incomeTitleInput" class="input dark" placeholder="Gelir başlığı" />
+          <input id="incomeAmountInput" class="input dark" type="number" placeholder="Tutar" />
+        </div>
+
+        <div class="form-grid">
+          <input id="incomeDateInput" class="input dark" type="date" />
+          <input id="incomeCategoryInput" class="input dark" placeholder="Kategori (satış, hizmet...)" />
+        </div>
+
+        <textarea id="incomeNoteInput" class="textarea dark" placeholder="Not"></textarea>
+
+        <div class="action-row">
+          <button id="addIncomeBtn" class="primary-btn" type="button">Gelir Ekle</button>
+          <button id="clearIncomeFormBtn" class="secondary-btn" type="button">Temizle</button>
+        </div>
+      </section>
+
+      <div id="incomeList"></div>
+    </section>
+
+    <!-- GİDER -->
+    <section id="expenseTab" class="tab-panel">
+      <section class="add-card glass-card">
+        <div class="section-head">Gider Ekle</div>
+
+        <div class="form-grid">
+          <input id="expenseTitleInput" class="input dark" placeholder="Gider başlığı" />
+          <input id="expenseAmountInput" class="input dark" type="number" placeholder="Tutar" />
+        </div>
+
+        <div class="form-grid">
+          <input id="expenseDateInput" class="input dark" type="date" />
+          <input id="expenseCategoryInput" class="input dark" placeholder="Kategori (market, yakıt...)" />
+        </div>
+
+        <textarea id="expenseNoteInput" class="textarea dark" placeholder="Not"></textarea>
+
+        <div class="action-row">
+          <button id="addExpenseBtn" class="primary-btn" type="button">Gider Ekle</button>
+          <button id="clearExpenseFormBtn" class="secondary-btn" type="button">Temizle</button>
+        </div>
+      </section>
+
+      <div id="expenseList"></div>
+    </section>
+
+    <!-- FATURALAR -->
+    <section id="billsTab" class="tab-panel">
+      <section class="add-card glass-card">
+        <div class="section-head">Fatura Ekle</div>
+
+        <div class="form-grid">
+          <input id="billTitleInput" class="input dark" placeholder="Fatura adı" />
+          <input id="billAmountInput" class="input dark" type="number" placeholder="Tutar" />
+        </div>
+
+        <div class="form-grid">
+          <input id="billDueDateInput" class="input dark" type="date" />
+          <input id="billCategoryInput" class="input dark" placeholder="Kategori (elektrik, su...)" />
+        </div>
+
+        <textarea id="billNoteInput" class="textarea dark" placeholder="Not"></textarea>
+
+        <div class="action-row">
+          <button id="addBillBtn" class="primary-btn" type="button">Fatura Ekle</button>
+          <button id="clearBillFormBtn" class="secondary-btn" type="button">Temizle</button>
+        </div>
+      </section>
+
+      <div id="billList"></div>
+    </section>
+
+    <!-- MAAŞ -->
+    <section id="salaryTab" class="tab-panel">
+      <section class="add-card glass-card">
+        <div class="section-head">Eleman Maaşı Ekle</div>
+
+        <div class="form-grid">
+          <input id="salaryNameInput" class="input dark" placeholder="Eleman adı" />
+          <input id="salaryAmountInput" class="input dark" type="number" placeholder="Maaş tutarı" />
+        </div>
+
+        <div class="form-grid">
+          <input id="salaryDateInput" class="input dark" type="date" />
+          <input id="salaryRoleInput" class="input dark" placeholder="Görev / pozisyon" />
+        </div>
+
+        <textarea id="salaryNoteInput" class="textarea dark" placeholder="Not"></textarea>
+
+        <div class="action-row">
+          <button id="addSalaryBtn" class="primary-btn" type="button">Maaş Ekle</button>
+          <button id="clearSalaryFormBtn" class="secondary-btn" type="button">Temizle</button>
+        </div>
+      </section>
+
+      <div id="salaryList"></div>
+    </section>
+
+    <!-- RAPORLAR -->
     <section id="reportsTab" class="tab-panel">
       <section class="chart-card glass-card">
-        <div class="section-head">Borç Grafiği</div>
+        <div class="section-head">Aylık Genel Grafik</div>
         <div class="chart-wrap">
-          <canvas id="debtChart"></canvas>
+          <canvas id="financeChart"></canvas>
         </div>
       </section>
 
       <section class="glass-card report-card">
-        <div class="section-head">Özet</div>
+        <div class="section-head">Aylık / Yıllık Özet</div>
         <div id="reportSummary" class="report-summary"></div>
       </section>
     </section>
 
-    <section id="backupTab" class="tab-panel">
-      <section class="glass-card backup-card">
-        <div class="section-head">Yedekleme</div>
-        <div class="settings-list">
-          <button id="exportJsonBtn" class="settings-btn" type="button">
-            <i data-lucide="download"></i>
-            <span>JSON Yedeği İndir</span>
-          </button>
-
-          <button id="exportCsvBtn" class="settings-btn" type="button">
-            <i data-lucide="file-down"></i>
-            <span>CSV İndir</span>
-          </button>
-
-          <button id="importJsonBtn" class="settings-btn" type="button">
-            <i data-lucide="upload"></i>
-            <span>JSON Yedeği Yükle</span>
-          </button>
-
-          <input id="importFileInput" type="file" accept=".json" class="hidden" />
-        </div>
-      </section>
-    </section>
-
+    <!-- AYARLAR -->
     <section id="settingsTab" class="tab-panel">
       <section class="glass-card settings-card">
         <div class="section-head">Ayarlar</div>
@@ -192,6 +284,18 @@
             <span>Tema Geçişi</span>
           </button>
 
+          <button id="exportJsonBtn" class="settings-btn" type="button">
+            <i data-lucide="download"></i>
+            <span>JSON Yedek İndir</span>
+          </button>
+
+          <button id="importJsonBtn" class="settings-btn" type="button">
+            <i data-lucide="upload"></i>
+            <span>JSON Yedek Yükle</span>
+          </button>
+
+          <input id="importFileInput" type="file" accept=".json" class="hidden" />
+
           <button id="logoutBtn" class="settings-btn danger" type="button">
             <i data-lucide="log-out"></i>
             <span>Çıkış Yap</span>
@@ -201,37 +305,51 @@
     </section>
 
     <nav class="bottom-nav glass-card">
-      <button class="nav-item active" data-tab="people" type="button">
+      <button class="nav-item active" data-tab="debts" type="button">
         <i data-lucide="users"></i>
-        <span>Kişiler</span>
+        <span>Borç</span>
+      </button>
+
+      <button class="nav-item" data-tab="income" type="button">
+        <i data-lucide="banknote-arrow-up"></i>
+        <span>Gelir</span>
+      </button>
+
+      <button class="nav-center-btn" id="navCenterBtn" type="button">
+        <i data-lucide="plus"></i>
+      </button>
+
+      <button class="nav-item" data-tab="expense" type="button">
+        <i data-lucide="banknote-arrow-down"></i>
+        <span>Gider</span>
+      </button>
+
+      <button class="nav-item" data-tab="bills" type="button">
+        <i data-lucide="receipt-text"></i>
+        <span>Fatura</span>
+      </button>
+
+      <button class="nav-item" data-tab="salary" type="button">
+        <i data-lucide="briefcase-business"></i>
+        <span>Maaş</span>
       </button>
 
       <button class="nav-item" data-tab="reports" type="button">
         <i data-lucide="bar-chart-3"></i>
-        <span>Raporlar</span>
-      </button>
-
-      <button class="nav-center-btn" id="navAddBtn" type="button">
-        <i data-lucide="plus"></i>
-      </button>
-
-      <button class="nav-item" data-tab="backup" type="button">
-        <i data-lucide="database-backup"></i>
-        <span>Yedek</span>
+        <span>Rapor</span>
       </button>
 
       <button class="nav-item" data-tab="settings" type="button">
         <i data-lucide="settings"></i>
-        <span>Ayarlar</span>
+        <span>Ayar</span>
       </button>
     </nav>
   </div>
 
-  <!-- NOTIFICATION DRAWER -->
   <div id="notificationDrawer" class="drawer hidden">
     <div class="drawer-card">
       <div class="drawer-header">
-        <span>Yaklaşan Hatırlatmalar</span>
+        <span>Bildirimler</span>
         <button id="closeDrawerBtn" class="icon-button small" type="button">
           <i data-lucide="x"></i>
         </button>
@@ -242,4 +360,4 @@
 
   <script type="module" src="app.js"></script>
 </body>
-</html>
+          </html>
