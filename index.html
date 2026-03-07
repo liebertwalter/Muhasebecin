@@ -3,190 +3,243 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Muhasebecin Firebase Test</title>
-  <style>
-    body{
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(59,130,246,.22), transparent 28%),
-        linear-gradient(180deg,#07112b 0%, #0b1638 100%);
-      color:#fff;
-    }
-    .card{
-      width:min(100%,420px);
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.1);
-      border-radius:28px;
-      padding:22px;
-      backdrop-filter:blur(14px);
-      -webkit-backdrop-filter:blur(14px);
-      box-shadow:0 20px 50px rgba(0,0,0,.35);
-    }
-    .logo{
-      width:70px;
-      height:70px;
-      margin:0 auto 14px;
-      border-radius:22px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(135deg,#3b82f6,#1d4ed8);
-      font-size:32px;
-      font-weight:800;
-    }
-    h1{
-      margin:0;
-      text-align:center;
-      font-size:38px;
-      font-weight:900;
-    }
-    p{
-      text-align:center;
-      color:#c7d2fe;
-      margin:8px 0 20px;
-    }
-    input, button{
-      width:100%;
-      box-sizing:border-box;
-      margin-top:10px;
-      border:none;
-      border-radius:16px;
-      padding:15px 16px;
-      font-size:17px;
-    }
-    input{
-      background:rgba(255,255,255,.1);
-      color:#fff;
-      outline:none;
-    }
-    input::placeholder{
-      color:#cbd5e1;
-    }
-    button{
-      font-weight:800;
-      color:#fff;
-      background:linear-gradient(135deg,#3b82f6,#2563eb);
-    }
-    .secondary{
-      background:rgba(255,255,255,.1);
-    }
-    #msg{
-      margin-top:14px;
-      min-height:22px;
-      text-align:center;
-      color:#dbeafe;
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
-  </style>
+  <title>Muhasebecin</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">M</div>
-    <h1>Muhasebecin</h1>
-    <p>Firebase test sayfası</p>
+  <div class="bg-blur bg-blur-1"></div>
+  <div class="bg-blur bg-blur-2"></div>
 
-    <input id="email" placeholder="E-posta" />
-    <input id="password" type="password" placeholder="Şifre" />
+  <!-- AUTH -->
+  <div id="authOverlay" class="overlay">
+    <div class="auth-card">
+      <div class="auth-logo">M</div>
+      <h1 class="auth-title">Muhasebecin</h1>
+      <p class="auth-subtitle">Postal Dijital tarafından oluşturuldu</p>
 
-    <button id="registerBtn">Kayıt Ol</button>
-    <button id="loginBtn">Giriş Yap</button>
-    <button id="logoutBtn" class="secondary">Çıkış Yap</button>
+      <div class="auth-tabs">
+        <button id="loginTabBtn" class="auth-tab active" type="button">Giriş Yap</button>
+        <button id="registerTabBtn" class="auth-tab" type="button">Kayıt Ol</button>
+      </div>
 
-    <div id="msg">Hazır</div>
+      <div id="registerExtraFields" class="hidden">
+        <input id="registerUsername" class="input" placeholder="Kullanıcı adı" />
+      </div>
+
+      <input id="authLoginValue" class="input" placeholder="E-posta veya kullanıcı adı" />
+      <input id="authEmail" class="input hidden" placeholder="E-posta" />
+      <input id="authPassword" class="input" type="password" placeholder="Şifre" />
+
+      <button id="authSubmitBtn" class="primary-btn" type="button">Giriş Yap</button>
+      <div id="authMessage" class="auth-message"></div>
+    </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+  <!-- APP -->
+  <div id="appRoot" class="app hidden">
+    <header class="topbar">
+      <div class="top-user">
+        <div id="avatarCircle" class="avatar">M</div>
+      </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCQfe0kFo_2owofpOMmNdTqNwLxxsSvSKU",
-      authDomain: "muhasebecinizz.firebaseapp.com",
-      projectId: "muhasebecinizz",
-      storageBucket: "muhasebecinizz.firebasestorage.app",
-      messagingSenderId: "717751925179",
-      appId: "1:717751925179:web:6b927078475e11fce96c9e",
-      measurementId: "G-94R335GH2Y"
-    };
+      <div class="top-title">
+        <div class="mini-title">Kişisel Muhasebe</div>
+        <div class="main-title">Muhasebecin</div>
+        <div class="sub-title">Postal Dijital tarafından oluşturuldu</div>
+      </div>
 
-    const msg = document.getElementById("msg");
-    const emailEl = document.getElementById("email");
-    const passwordEl = document.getElementById("password");
+      <button id="notificationBtn" class="icon-button" type="button" title="Bildirimler">
+        <i data-lucide="bell"></i>
+        <span id="notificationBadge" class="badge hidden">0</span>
+      </button>
+    </header>
 
-    function yaz(text){
-      msg.textContent = text;
-    }
+    <section class="summary-card glass-card">
+      <div class="summary-left">
+        <div class="wallet-box">
+          <i data-lucide="wallet"></i>
+        </div>
+        <div>
+          <div class="card-label">Net Durum</div>
+          <div class="summary-price">₺ <span id="netTotal">0</span></div>
+          <div class="summary-mini" id="summaryMini">Hazır</div>
+        </div>
+      </div>
 
-    try {
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
+      <button id="voiceBtn" class="voice-card-btn" type="button">
+        <i data-lucide="mic"></i>
+        <div>
+          <span>Sesli Komut</span>
+          <small>Komut ver</small>
+        </div>
+      </button>
+    </section>
 
-      document.getElementById("registerBtn").onclick = async () => {
-        try {
-          const email = emailEl.value.trim();
-          const password = passwordEl.value.trim();
+    <section class="mini-stats">
+      <div class="mini-stat glass-card">
+        <div class="mini-stat-label">Bana Borçlu</div>
+        <div class="mini-stat-value">₺ <span id="owedToMeTotal">0</span></div>
+      </div>
+      <div class="mini-stat glass-card">
+        <div class="mini-stat-label">Ben Borçluyum</div>
+        <div class="mini-stat-value">₺ <span id="iOweTotal">0</span></div>
+      </div>
+    </section>
 
-          if (!email || !password) {
-            yaz("E-posta ve şifre gir.");
-            return;
-          }
+    <section class="search-card glass-card">
+      <div class="search-input-wrap">
+        <i data-lucide="search"></i>
+        <input id="searchInput" type="text" placeholder="Kişi ara..." />
+      </div>
+    </section>
 
-          const userCred = await createUserWithEmailAndPassword(auth, email, password);
-          yaz("Kayıt başarılı: " + userCred.user.email);
-        } catch (e) {
-          yaz("Kayıt hatası: " + e.code + " / " + e.message);
-        }
-      };
+    <section id="peopleTab" class="tab-panel active">
+      <section class="add-card glass-card">
+        <div class="section-head">Yeni Kişi / Borç Kaydı</div>
 
-      document.getElementById("loginBtn").onclick = async () => {
-        try {
-          const email = emailEl.value.trim();
-          const password = passwordEl.value.trim();
+        <div class="form-grid">
+          <input id="personNameInput" class="input dark" placeholder="Kişi adı" />
+          <input id="amountInput" class="input dark" type="number" placeholder="Tutar" />
+        </div>
 
-          if (!email || !password) {
-            yaz("E-posta ve şifre gir.");
-            return;
-          }
+        <div class="form-grid">
+          <select id="relationSelect" class="input dark">
+            <option value="they_owe_me">Bu kişi bana borçlu</option>
+            <option value="i_owe_them">Ben bu kişiye borçluyum</option>
+          </select>
+          <input id="dueDateInput" class="input dark" type="date" />
+        </div>
 
-          const userCred = await signInWithEmailAndPassword(auth, email, password);
-          yaz("Giriş başarılı: " + userCred.user.email);
-        } catch (e) {
-          yaz("Giriş hatası: " + e.code + " / " + e.message);
-        }
-      };
+        <textarea id="noteInput" class="textarea dark" placeholder="Not (isteğe bağlı)"></textarea>
 
-      document.getElementById("logoutBtn").onclick = async () => {
-        try {
-          await signOut(auth);
-          yaz("Çıkış yapıldı");
-        } catch (e) {
-          yaz("Çıkış hatası: " + e.code + " / " + e.message);
-        }
-      };
+        <div class="action-row">
+          <button id="addPersonBtn" class="primary-btn" type="button">Kaydı Ekle</button>
+          <button id="clearFormBtn" class="secondary-btn" type="button">Temizle</button>
+        </div>
+      </section>
 
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          yaz("Aktif kullanıcı: " + user.email);
-        } else {
-          yaz("Giriş yapılmadı");
-        }
-      });
-    } catch (e) {
-      yaz("Başlatma hatası: " + e.message);
-    }
-  </script>
+      <section class="people-section">
+        <div class="section-title-line">
+          <div class="section-title-left">
+            <i data-lucide="briefcase"></i>
+            <span>Kişiler</span>
+          </div>
+          <div class="title-line"></div>
+        </div>
+
+        <div id="peopleList"></div>
+      </section>
+    </section>
+
+    <section id="reportsTab" class="tab-panel">
+      <section class="chart-card glass-card">
+        <div class="section-head">Borç Grafiği</div>
+        <div class="chart-wrap">
+          <canvas id="debtChart"></canvas>
+        </div>
+      </section>
+
+      <section class="glass-card report-card">
+        <div class="section-head">Özet</div>
+        <div id="reportSummary" class="report-summary"></div>
+      </section>
+    </section>
+
+    <section id="backupTab" class="tab-panel">
+      <section class="glass-card backup-card">
+        <div class="section-head">Yedekleme</div>
+        <div class="settings-list">
+          <button id="exportJsonBtn" class="settings-btn" type="button">
+            <i data-lucide="download"></i>
+            <span>JSON Yedeği İndir</span>
+          </button>
+
+          <button id="exportCsvBtn" class="settings-btn" type="button">
+            <i data-lucide="file-down"></i>
+            <span>CSV İndir</span>
+          </button>
+
+          <button id="importJsonBtn" class="settings-btn" type="button">
+            <i data-lucide="upload"></i>
+            <span>JSON Yedeği Yükle</span>
+          </button>
+
+          <input id="importFileInput" type="file" accept=".json" class="hidden" />
+        </div>
+      </section>
+    </section>
+
+    <section id="settingsTab" class="tab-panel">
+      <section class="glass-card settings-card">
+        <div class="section-head">Ayarlar</div>
+
+        <div class="settings-list">
+          <button id="requestNotificationBtn" class="settings-btn" type="button">
+            <i data-lucide="bell-ring"></i>
+            <span>Bildirim İzni İste</span>
+          </button>
+
+          <button id="testNotificationBtn" class="settings-btn" type="button">
+            <i data-lucide="send"></i>
+            <span>Test Bildirimi Göster</span>
+          </button>
+
+          <button id="toggleThemeBtn" class="settings-btn" type="button">
+            <i data-lucide="moon-star"></i>
+            <span>Tema Geçişi</span>
+          </button>
+
+          <button id="logoutBtn" class="settings-btn danger" type="button">
+            <i data-lucide="log-out"></i>
+            <span>Çıkış Yap</span>
+          </button>
+        </div>
+      </section>
+    </section>
+
+    <nav class="bottom-nav glass-card">
+      <button class="nav-item active" data-tab="people" type="button">
+        <i data-lucide="users"></i>
+        <span>Kişiler</span>
+      </button>
+
+      <button class="nav-item" data-tab="reports" type="button">
+        <i data-lucide="bar-chart-3"></i>
+        <span>Raporlar</span>
+      </button>
+
+      <button class="nav-center-btn" id="navAddBtn" type="button">
+        <i data-lucide="plus"></i>
+      </button>
+
+      <button class="nav-item" data-tab="backup" type="button">
+        <i data-lucide="database-backup"></i>
+        <span>Yedek</span>
+      </button>
+
+      <button class="nav-item" data-tab="settings" type="button">
+        <i data-lucide="settings"></i>
+        <span>Ayarlar</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- NOTIFICATION DRAWER -->
+  <div id="notificationDrawer" class="drawer hidden">
+    <div class="drawer-card">
+      <div class="drawer-header">
+        <span>Yaklaşan Hatırlatmalar</span>
+        <button id="closeDrawerBtn" class="icon-button small" type="button">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div id="notificationList" class="drawer-list"></div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>
