@@ -85,9 +85,7 @@
 
         <div class="add-row">
           <input id="isim" type="text" placeholder="Kişi Adı" />
-          <button class="add-main-btn" onclick="yeniKisi()">
-            Ekle
-          </button>
+          <button class="add-main-btn" onclick="yeniKisi()">Ekle</button>
         </div>
       </section>
 
@@ -114,26 +112,26 @@
     </main>
 
     <nav class="bottom-nav glass-card">
-      <button class="nav-item active">
+      <button class="nav-item active" type="button">
         <i data-lucide="users"></i>
         <span>Kişiler</span>
       </button>
 
-      <button class="nav-item">
+      <button class="nav-item" type="button">
         <i data-lucide="bar-chart-3"></i>
         <span>Raporlar</span>
       </button>
 
-      <button class="nav-center-btn" onclick="yeniKisi()">
+      <button class="nav-center-btn" type="button" onclick="yeniKisi()">
         <i data-lucide="plus"></i>
       </button>
 
-      <button class="nav-item" onclick="jsonYedek()">
+      <button class="nav-item" type="button" onclick="jsonYedek()">
         <i data-lucide="database-backup"></i>
         <span>Yedekle</span>
       </button>
 
-      <button class="nav-item">
+      <button class="nav-item" type="button">
         <i data-lucide="settings"></i>
         <span>Ayarlar</span>
       </button>
@@ -141,6 +139,7 @@
   </div>
 
   <script src="app.js"></script>
+  <script type="module" src="firebase.js"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
@@ -150,10 +149,21 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-      if (typeof lucide !== "undefined") lucide.createIcons();
-      if (typeof listeyiGuncelle === "function") listeyiGuncelle();
-      if (typeof grafikCiz === "function") grafikCiz();
-      if (typeof hatirlaticiKontrol === "function") hatirlaticiKontrol();
+      if (typeof lucide !== "undefined") {
+        lucide.createIcons();
+      }
+
+      if (typeof listeyiGuncelle === "function") {
+        listeyiGuncelle();
+      }
+
+      if (typeof grafikCiz === "function") {
+        grafikCiz();
+      }
+
+      if (typeof hatirlaticiKontrol === "function") {
+        hatirlaticiKontrol();
+      }
     });
   </script>
 </body>
