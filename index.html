@@ -23,7 +23,6 @@
       --shadow:0 18px 40px rgba(0,0,0,0.35);
       --radius-xl:26px;
     }
-
     body.light{
       --bg-1:#edf3ff;
       --bg-2:#f9fbff;
@@ -34,7 +33,6 @@
       --muted:#475569;
       --shadow:0 18px 40px rgba(15,23,42,0.12);
     }
-
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{margin:0;padding:0;min-height:100%}
     body{
@@ -45,15 +43,12 @@
         radial-gradient(circle at left center, rgba(38,83,220,.16), transparent 30%),
         linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
     }
-
     .hidden{display:none !important}
-
     .bg-blur{
       position:fixed;width:180px;height:180px;filter:blur(70px);border-radius:50%;z-index:0;opacity:.5
     }
     .bg-blur-1{top:60px;left:-40px;background:#1d4ed8}
     .bg-blur-2{right:-40px;bottom:120px;background:#2563eb}
-
     .overlay{
       position:fixed;inset:0;z-index:99999;background:rgba(2,6,23,.82);
       backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:18px
@@ -76,7 +71,6 @@
     }
     .auth-tab.active{background:#2563eb}
     .auth-message{margin-top:12px;font-size:13px;color:#dbeafe;text-align:center;min-height:18px}
-
     .app{
       position:relative;z-index:2;width:min(100%,560px);margin:0 auto;min-height:100vh;padding:22px 14px 140px
     }
@@ -85,7 +79,6 @@
       border:1px solid var(--line);border-radius:var(--radius-xl);box-shadow:var(--shadow);
       backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)
     }
-
     .topbar{
       display:grid;grid-template-columns:64px 1fr 64px;align-items:center;gap:10px;margin-bottom:18px
     }
@@ -106,7 +99,6 @@
       position:absolute;top:-4px;right:-2px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#ff5f63;color:#fff;
       font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center
     }
-
     .summary-card{
       padding:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px
     }
@@ -124,14 +116,12 @@
     }
     .voice-card-btn span{display:block;font-weight:800;text-align:left}
     .voice-card-btn small{display:block;color:#9db0eb;text-align:left;margin-top:3px}
-
     .mini-stats{
       display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px
     }
     .mini-stat{padding:14px}
     .mini-stat-label{font-size:13px;color:var(--muted);margin-bottom:6px}
     .mini-stat-value{font-size:22px;font-weight:900}
-
     .search-card,.add-card,.chart-card,.report-card,.settings-card{
       padding:16px;margin-bottom:16px
     }
@@ -139,7 +129,6 @@
       display:flex;align-items:center;gap:12px;border-radius:24px;padding:14px 16px;background:rgba(8,15,40,.32);border:1px solid rgba(255,255,255,.08)
     }
     .search-input-wrap input{margin-top:0;background:transparent;padding:0}
-
     .input,.textarea,select.input{
       width:100%;margin-top:10px;border:none;outline:none;border-radius:16px;padding:14px 16px;font-size:16px;background:rgba(255,255,255,.08);color:var(--text)
     }
@@ -147,7 +136,6 @@
     .auth-input::placeholder{color:#dbeafe}
     .dark{background:rgba(9,16,41,.35);border:1px solid rgba(255,255,255,.08)}
     .textarea{min-height:90px;resize:vertical}
-
     .primary-btn,.secondary-btn,.settings-btn,.nav-item,.nav-center-btn,.action-btn{
       border:none;cursor:pointer
     }
@@ -157,15 +145,12 @@
     .secondary-btn{
       width:100%;margin-top:12px;border-radius:16px;padding:14px;background:rgba(255,255,255,.1);color:var(--text);font-weight:800;font-size:16px
     }
-
     .section-head{margin-bottom:14px;font-size:17px;font-weight:800}
     .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .action-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
     .section-title-line{display:flex;align-items:center;gap:10px;margin:8px 4px 14px}
     .section-title-left{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:800;white-space:nowrap}
     .title-line{height:1px;width:100%;background:rgba(255,255,255,.16)}
-
     .record-card{padding:16px;margin-bottom:14px}
     .record-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .record-left{display:flex;gap:12px;align-items:center}
@@ -189,21 +174,17 @@
     .action-btn.warn{background:linear-gradient(135deg,#515875,#363e5c)}
     .action-btn.danger{background:linear-gradient(135deg,#ff6b6b,#ef4444)}
     .empty-state{padding:16px;text-align:center;color:var(--muted)}
-
     .tab-panel{display:none}
     .tab-panel.active{display:block}
-
     .chart-wrap{position:relative;height:260px}
     .report-summary{display:grid;gap:10px}
     .report-line{display:flex;justify-content:space-between;font-size:15px}
-
     .settings-list{display:grid;gap:10px}
     .settings-btn{
       width:100%;border-radius:16px;padding:14px 16px;background:rgba(255,255,255,.08);color:var(--text);font-weight:800;
       display:flex;align-items:center;gap:10px;justify-content:flex-start
     }
     .settings-btn.danger{background:rgba(255,90,103,.16);color:#ffd6db}
-
     .bottom-nav{
       position:fixed;left:50%;bottom:14px;transform:translateX(-50%);width:min(96%, 540px);padding:12px 10px;
       display:flex;gap:6px;align-items:end;justify-content:center;flex-wrap:wrap;z-index:30
@@ -217,7 +198,6 @@
       width:74px;height:74px;margin:-32px auto 0;border:none;border-radius:50%;background:linear-gradient(135deg,#3b8cff,#1d5df6);color:#fff;
       display:flex;align-items:center;justify-content:center
     }
-
     .drawer{
       position:fixed;inset:0;background:rgba(2,6,23,.45);z-index:9999;padding:24px 14px
     }
@@ -228,7 +208,6 @@
     .drawer-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:900}
     .drawer-list{display:grid;gap:10px}
     .notification-item{padding:12px;border-radius:16px;background:rgba(255,255,255,.08);font-size:14px}
-
     @media (max-width:430px){
       .summary-card,.form-grid,.action-row,.record-actions,.mini-stats{grid-template-columns:1fr;display:grid}
       .summary-card{display:flex;flex-direction:column;align-items:flex-start}
@@ -247,20 +226,16 @@
       <div class="auth-logo">M</div>
       <div class="auth-title">Muhasebecin</div>
       <div class="auth-subtitle">Postal Dijital tarafından oluşturuldu</div>
-
       <div class="auth-tabs">
         <button id="loginTabBtn" class="auth-tab active" type="button">Giriş Yap</button>
         <button id="registerTabBtn" class="auth-tab" type="button">Kayıt Ol</button>
       </div>
-
       <div id="registerFields" class="hidden">
         <input id="registerUsername" class="input auth-input" placeholder="Kullanıcı adı" />
       </div>
-
-      <input id="authLoginValue" class="input auth-input" placeholder="E-posta veya kullanıcı adı" />
+      <input id="authLoginValue" class="input auth-input" placeholder="E-posta" />
       <input id="authEmail" class="input auth-input hidden" placeholder="E-posta" />
       <input id="authPassword" class="input auth-input" type="password" placeholder="Şifre" />
-
       <button id="authSubmitBtn" class="primary-btn" type="button">Giriş Yap</button>
       <div id="authMessage" class="auth-message"></div>
     </div>
@@ -268,16 +243,12 @@
 
   <div id="appRoot" class="app hidden">
     <header class="topbar">
-      <div class="top-user">
-        <div id="avatarCircle" class="avatar">M</div>
-      </div>
-
+      <div class="top-user"><div id="avatarCircle" class="avatar">M</div></div>
       <div class="top-title">
         <div class="mini-title">Kişisel / Küçük İşletme Muhasebesi</div>
         <div class="main-title">Muhasebecin</div>
         <div class="sub-title">Postal Dijital tarafından oluşturuldu</div>
       </div>
-
       <button id="notificationBtn" class="icon-button" type="button">
         <i data-lucide="bell"></i>
         <span id="notificationBadge" class="badge hidden">0</span>
@@ -286,45 +257,24 @@
 
     <section class="summary-card glass-card">
       <div class="summary-left">
-        <div class="wallet-box">
-          <i data-lucide="wallet"></i>
-        </div>
+        <div class="wallet-box"><i data-lucide="wallet"></i></div>
         <div>
           <div class="card-label">Net Durum</div>
           <div class="summary-price">₺ <span id="netTotal">0</span></div>
           <div class="summary-mini" id="summaryMini">Hazır</div>
         </div>
       </div>
-
       <button id="voiceBtn" class="voice-card-btn" type="button">
         <i data-lucide="mic"></i>
-        <div>
-          <span>Sesli Komut</span>
-          <small>Komut ver</small>
-        </div>
+        <div><span>Sesli Komut</span><small>Komut ver</small></div>
       </button>
     </section>
 
     <section class="mini-stats">
-      <div class="mini-stat glass-card">
-        <div class="mini-stat-label">Bu Ay Gelir</div>
-        <div class="mini-stat-value">₺ <span id="monthIncome">0</span></div>
-      </div>
-
-      <div class="mini-stat glass-card">
-        <div class="mini-stat-label">Bu Ay Gider</div>
-        <div class="mini-stat-value">₺ <span id="monthExpense">0</span></div>
-      </div>
-
-      <div class="mini-stat glass-card">
-        <div class="mini-stat-label">Bana Borçlu</div>
-        <div class="mini-stat-value">₺ <span id="owedToMeTotal">0</span></div>
-      </div>
-
-      <div class="mini-stat glass-card">
-        <div class="mini-stat-label">Ben Borçluyum</div>
-        <div class="mini-stat-value">₺ <span id="iOweTotal">0</span></div>
-      </div>
+      <div class="mini-stat glass-card"><div class="mini-stat-label">Bu Ay Gelir</div><div class="mini-stat-value">₺ <span id="monthIncome">0</span></div></div>
+      <div class="mini-stat glass-card"><div class="mini-stat-label">Bu Ay Gider</div><div class="mini-stat-value">₺ <span id="monthExpense">0</span></div></div>
+      <div class="mini-stat glass-card"><div class="mini-stat-label">Bana Borçlu</div><div class="mini-stat-value">₺ <span id="owedToMeTotal">0</span></div></div>
+      <div class="mini-stat glass-card"><div class="mini-stat-label">Ben Borçluyum</div><div class="mini-stat-value">₺ <span id="iOweTotal">0</span></div></div>
     </section>
 
     <section class="search-card glass-card">
@@ -444,5 +394,105 @@
     <section id="reportsTab" class="tab-panel">
       <section class="chart-card glass-card">
         <div class="section-head">Aylık Genel Grafik</div>
-        <div class="chart-wrap">
-          <canvas id="financ
+        <div class="chart-wrap"><canvas id="financeChart"></canvas></div>
+      </section>
+      <section class="glass-card report-card">
+        <div class="section-head">Aylık / Yıllık Özet</div>
+        <div id="reportSummary" class="report-summary"></div>
+      </section>
+ <script type="module">
+
+// Firebase import
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCQfe0kFo_2owofpOMmNdTqNwLxxsSvSKU",
+  authDomain: "muhasebecinizz.firebaseapp.com",
+  projectId: "muhasebecinizz",
+  storageBucket: "muhasebecinizz.firebasestorage.app",
+  messagingSenderId: "717751925179",
+  appId: "1:717751925179:web:6b927078475e11fce96c9e",
+  measurementId: "G-94R335GH2Y"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// ELEMENTLER
+const authOverlay = document.getElementById("authOverlay");
+const appRoot = document.getElementById("appRoot");
+const loginTabBtn = document.getElementById("loginTabBtn");
+const registerTabBtn = document.getElementById("registerTabBtn");
+const registerFields = document.getElementById("registerFields");
+const authSubmitBtn = document.getElementById("authSubmitBtn");
+const authLoginValue = document.getElementById("authLoginValue");
+const authPassword = document.getElementById("authPassword");
+const authEmail = document.getElementById("authEmail");
+const authMessage = document.getElementById("authMessage");
+const logoutBtn = document.getElementById("logoutBtn");
+
+let isRegister = false;
+
+// TAB değişimi
+loginTabBtn.onclick = () => {
+  isRegister = false;
+  loginTabBtn.classList.add("active");
+  registerTabBtn.classList.remove("active");
+  registerFields.classList.add("hidden");
+  authSubmitBtn.textContent = "Giriş Yap";
+};
+
+registerTabBtn.onclick = () => {
+  isRegister = true;
+  registerTabBtn.classList.add("active");
+  loginTabBtn.classList.remove("active");
+  registerFields.classList.remove("hidden");
+  authSubmitBtn.textContent = "Kayıt Ol";
+};
+
+// AUTH işlemi
+authSubmitBtn.onclick = async () => {
+
+  const email = isRegister ? authEmail.value : authLoginValue.value;
+  const password = authPassword.value;
+
+  if(!email || !password){
+    authMessage.textContent = "Bilgileri doldur.";
+    return;
+  }
+
+  try{
+
+    if(isRegister){
+      await createUserWithEmailAndPassword(auth,email,password);
+      authMessage.textContent = "Kayıt başarılı";
+    }else{
+      await signInWithEmailAndPassword(auth,email,password);
+      authMessage.textContent = "Giriş başarılı";
+    }
+
+  }catch(e){
+    authMessage.textContent = e.message;
+  }
+
+};
+
+// auth state
+onAuthStateChanged(auth,(user)=>{
+  if(user){
+    authOverlay.classList.add("hidden");
+    appRoot.classList.remove("hidden");
+  }else{
+    authOverlay.classList.remove("hidden");
+    appRoot.classList.add("hidden");
+  }
+});
+
+// çıkış
+logoutBtn.onclick = ()=>{
+  signOut(auth);
+};
+
+  </script>
