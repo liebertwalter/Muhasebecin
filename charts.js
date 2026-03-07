@@ -1,68 +1,59 @@
-/* GRAFİK SİSTEMİ */
+let muhasebeChart = null;
 
-function grafikVerisiHazirla(){
+function grafikVerisiHazirla() {
+  const kisiler = tumKisiler();
+  const isimler = [];
+  const borclar = [];
 
-let kisiler = tumKisiler();
+  kisiler.forEach((kisi) => {
+    isimler.push(kisi.isim);
+    borclar.push(kisi.bakiye);
+  });
 
-let isimler = [];
-let borclar = [];
-
-kisiler.forEach(kisi=>{
-
-isimler.push(kisi.isim);
-borclar.push(kisi.bakiye);
-
-});
-
-return {
-isimler:isimler,
-borclar:borclar
-};
-
+  return { isimler, borclar };
 }
 
-/* GRAFİK OLUŞTUR */
+function grafikCiz() {
+  const canvas = document.getElementById("grafik");
+  if (!canvas || typeof Chart === "undefined") return;
 
-function grafikCiz(){
+  const veri = grafikVerisiHazirla();
 
-let canvas = document.getElementById("grafik");
+  if (muhasebeChart) {
+    muhasebeChart.destroy();
+  }
 
-if(!canvas) return;
-
-let veri = grafikVerisiHazirla();
-
-new Chart(canvas, {
-
-type: "bar",
-
-data: {
-
-labels: veri.isimler,
-
-datasets: [{
-
-label: "Borçlar",
-
-data: veri.borclar,
-
-backgroundColor:"#00b894"
-
-}]
-
-},
-
-options: {
-
-responsive:true,
-
-plugins:{
-legend:{
-display:false
-}
-}
-
-}
-
-});
-
+  muhasebeChart = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: veri.isimler,
+      datasets: [
+        {
+          label: "Borçlar",
+          data: veri.borclar,
+          borderWidth: 0,
+          borderRadius: 12
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#cbd5e1" },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { color: "#cbd5e1" },
+          grid: { color: "rgba(255,255,255,0.08)" }
+        }
+      }
+    }
+  });
 }
