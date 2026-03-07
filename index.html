@@ -24,7 +24,7 @@
         <div class="sub-title">Postal Dijital tarafından oluşturuldu</div>
       </div>
 
-      <button id="notificationBtn" class="icon-button" type="button">
+      <button id="notificationBtn" class="icon-button" type="button" aria-label="Bildirimler">
         <i data-lucide="bell"></i>
         <span id="notificationBadge" class="badge hidden">0</span>
       </button>
@@ -38,7 +38,7 @@
         <div>
           <div class="card-label">Net Durum</div>
           <div class="summary-price">₺ <span id="netTotal">0</span></div>
-          <div class="summary-mini" id="summaryMini">Hazır</div>
+          <div class="summary-mini" id="summaryMini">Sistem hazır</div>
         </div>
       </div>
 
@@ -46,7 +46,7 @@
         <i data-lucide="mic"></i>
         <div>
           <span>Sesli Komut</span>
-          <small>Komut ver</small>
+          <small>Borç ekle</small>
         </div>
       </button>
     </section>
@@ -262,7 +262,7 @@
 
           <input id="importFileInput" type="file" accept=".json" class="hidden" />
 
-          <button id="resetDataBtn" class="settings-btn" type="button">
+          <button id="resetDataBtn" class="settings-btn danger" type="button">
             <i data-lucide="rotate-ccw"></i>
             <span>Tüm Veriyi Sıfırla</span>
           </button>
@@ -326,4 +326,4 @@
 
   <script src="app.js"></script>
 </body>
-          </html>
+</html>
