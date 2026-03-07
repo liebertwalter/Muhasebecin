@@ -8,6 +8,9 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
   <script src="database.js"></script>
   <script src="utils.js"></script>
   <script src="auth.js"></script>
@@ -16,42 +19,99 @@
   <script src="charts.js"></script>
   <script src="notifications.js"></script>
   <script src="voice.js"></script>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>Muhasebecin</h1>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Kişisel muhasebe</p>
+        <h1>Muhasebecin</h1>
+      </div>
+      <button class="icon-btn" onclick="listeyiGuncelle()" title="Yenile">
+        <i data-lucide="refresh-cw"></i>
+      </button>
+    </header>
 
-    <div class="toplam">
-      Toplam Borç: <span id="toplam">0</span>
-    </div>
+    <section class="hero-card">
+      <div class="hero-left">
+        <div class="hero-icon">
+          <i data-lucide="wallet"></i>
+        </div>
+        <div>
+          <p class="muted">Toplam Borç</p>
+          <div class="toplam">₺ <span id="toplam">0</span></div>
+        </div>
+      </div>
+      <button class="primary-btn mic-btn" onclick="sesliKomutBaslat()">
+        <i data-lucide="mic"></i>
+        <span>Sesli Komut</span>
+      </button>
+    </section>
 
-    <input id="isim" type="text" placeholder="Kişi adı" />
+    <section class="panel">
+      <div class="panel-title">
+        <i data-lucide="user-plus"></i>
+        <span>Yeni Kişi</span>
+      </div>
 
-    <button class="btn-ekle" onclick="yeniKisi()">Kişi Ekle</button>
+      <div class="input-group">
+        <input id="isim" type="text" placeholder="Kişi adı gir" />
+        <button class="primary-btn" onclick="yeniKisi()">
+          <i data-lucide="plus"></i>
+          <span>Kişi Ekle</span>
+        </button>
+      </div>
+    </section>
 
-    <input
-      id="arama"
-      class="search"
-      type="text"
-      placeholder="Kişi ara"
-      oninput="aramaYap()"
-    />
+    <section class="panel">
+      <div class="panel-title">
+        <i data-lucide="search"></i>
+        <span>Ara ve İşlemler</span>
+      </div>
 
-    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
-      <button class="btn-mic" onclick="sesliKomutBaslat()">🎤 Sesli Komut</button>
-      <button onclick="csvIndir()">CSV İndir</button>
-      <button onclick="jsonYedek()">Yedek İndir</button>
-      <button onclick="yedekYukleDosyaSec()">Yedek Yükle</button>
-    </div>
+      <input
+        id="arama"
+        class="search"
+        type="text"
+        placeholder="Kişi ara..."
+        oninput="aramaYap()"
+      />
 
-    <div id="liste"></div>
+      <div class="actions-grid">
+        <button class="secondary-btn" onclick="csvIndir()">
+          <i data-lucide="file-down"></i>
+          <span>CSV İndir</span>
+        </button>
 
-    <div class="card">
-      <h3>Grafik</h3>
-      <canvas id="grafik"></canvas>
-    </div>
+        <button class="secondary-btn" onclick="jsonYedek()">
+          <i data-lucide="download"></i>
+          <span>Yedek İndir</span>
+        </button>
+
+        <button class="secondary-btn" onclick="yedekYukleDosyaSec()">
+          <i data-lucide="upload"></i>
+          <span>Yedek Yükle</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <i data-lucide="users"></i>
+        <span>Kişiler</span>
+      </div>
+      <div id="liste"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <i data-lucide="bar-chart-3"></i>
+        <span>Grafik</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="grafik"></canvas>
+      </div>
+    </section>
   </div>
 
   <script src="app.js"></script>
@@ -64,6 +124,10 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
+      if (typeof lucide !== "undefined") {
+        lucide.createIcons();
+      }
+
       if (typeof listeyiGuncelle === "function") {
         listeyiGuncelle();
       }
@@ -78,4 +142,4 @@
     });
   </script>
 </body>
-      </html>
+  </html>
