@@ -1,9 +1,7 @@
-// Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCQf0ekFo_2owofpOMnNdTqNwLxxsSvSKU",
   authDomain: "muhasebeciniz.firebaseapp.com",
@@ -14,13 +12,10 @@ const firebaseConfig = {
   measurementId: "G-94R335GH2Y"
 };
 
-// Firebase başlat
 const app = initializeApp(firebaseConfig);
 
-// Servisler
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Global erişim
 window.firebaseAuth = auth;
 window.firebaseDB = db;
