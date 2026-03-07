@@ -42,6 +42,16 @@ function tl(v) {
   return Number(v || 0).toLocaleString("tr-TR");
 }
 
+function showApp() {
+  $("authOverlay").classList.add("hidden");
+  $("appRoot").classList.remove("hidden");
+}
+
+function showAuth() {
+  $("authOverlay").classList.remove("hidden");
+  $("appRoot").classList.add("hidden");
+}
+
 async function persistStore() {
   saveLocalStore(store);
   if (currentUser) {
@@ -89,16 +99,6 @@ async function handleAuthSubmit() {
   } catch (e) {
     $("authMessage").textContent = e.message || "Bir hata oluştu.";
   }
-}
-
-function showApp() {
-  $("authOverlay").classList.add("hidden");
-  $("appRoot").classList.remove("hidden");
-}
-
-function showAuth() {
-  $("authOverlay").classList.remove("hidden");
-  $("appRoot").classList.add("hidden");
 }
 
 function applyTheme() {
@@ -323,10 +323,6 @@ function renderAll() {
   }
 
   if (typeof lucide !== "undefined") lucide.createIcons();
-}
-
-function applyTheme() {
-  document.body.classList.toggle("light", store.settings.theme === "light");
 }
 
 async function initUser(user) {
@@ -659,4 +655,5 @@ function setupEvents() {
   $("billList").addEventListener("click", handleRecordActions);
   $("salaryList").addEventListener("click", handleRecordActions);
 
-  document.que
+  document.querySelectorAll(".nav-item").forEach((btn) => {
+    btn.addEventListener("click", () => switchTab(btn.data
