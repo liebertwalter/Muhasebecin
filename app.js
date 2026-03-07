@@ -132,7 +132,9 @@ function getNotifications() {
     const diff = Math.round((d - today) / (1000 * 60 * 60 * 24));
     if (diff <= 3) {
       items.push({
-        text: `${item.title} faturası ${diff < 0 ? Math.abs(diff) + " gün gecikti" : diff === 0 ? "bugün son gün" : diff + " gün kaldı"}`
+        text: `${item.title} faturası ${
+          diff < 0 ? Math.abs(diff) + " gün gecikti" : diff === 0 ? "bugün son gün" : diff + " gün kaldı"
+        }`
       });
     }
   });
@@ -144,7 +146,9 @@ function getNotifications() {
     const diff = Math.round((d - today) / (1000 * 60 * 60 * 24));
     if (diff <= 3) {
       items.push({
-        text: `${item.name} maaşı ${diff < 0 ? Math.abs(diff) + " gün gecikti" : diff === 0 ? "bugün ödenecek" : diff + " gün kaldı"}`
+        text: `${item.name} maaşı ${
+          diff < 0 ? Math.abs(diff) + " gün gecikti" : diff === 0 ? "bugün ödenecek" : diff + " gün kaldı"
+        }`
       });
     }
   });
@@ -182,6 +186,7 @@ function renderSummary() {
 
 function renderNotifications() {
   const list = getNotifications();
+
   if (!list.length) {
     $("notificationList").innerHTML = `<div class="empty-state">Bildirim yok.</div>`;
     $("notificationBadge").classList.add("hidden");
@@ -269,6 +274,7 @@ function renderBills() {
       <button class="action-btn primary" data-type="bill" data-id="${item.id}" data-action="toggle">${item.paid ? "Bekliyor Yap" : "Ödendi Yap"}</button>
       <button class="action-btn danger" data-type="bill" data-id="${item.id}" data-action="delete">Sil</button>
     `;
+
     return cardHtml(item.title, badge, meta, actions, "F");
   }).join("");
 }
@@ -292,6 +298,7 @@ function renderSalaries() {
       <button class="action-btn primary" data-type="salary" data-id="${item.id}" data-action="toggle">${item.paid ? "Bekliyor Yap" : "Ödendi Yap"}</button>
       <button class="action-btn danger" data-type="salary" data-id="${item.id}" data-action="delete">Sil</button>
     `;
+
     return cardHtml(item.name, badge, meta, actions, item.name.charAt(0).toUpperCase());
   }).join("");
 }
@@ -669,6 +676,4 @@ function startVoice() {
       note: "Sesli komut ile eklendi"
     });
 
-    saveStore();
-    renderAll();
-    alert(
+ 
