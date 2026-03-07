@@ -1,135 +1,155 @@
-import {
-  registerUser,
-  loginUser,
-  logoutUser,
-  observeAuth,
-  loadCloudStore,
-  saveCloudStore,
-  loadProfile
-} from "./firebase.js";
-
-import {
-  createEmptyStore,
-  normalizeStore,
-  loadLocalStore,
-  saveLocalStore,
-  addDebt,
-  addIncome,
-  addExpense,
-  addBill,
-  addSalary,
-  toggleBillPaid,
-  toggleSalaryPaid,
-  deleteDebt,
-  deleteIncome,
-  deleteExpense,
-  deleteBill,
-  deleteSalary,
-  computeSummary,
-  getNotifications,
-  exportJson
-} from "./database.js";
-
-let chartInstance = null;
-let store = createEmptyStore();
-let currentUser = null;
-let currentProfile = null;
-let authMode = "login";
+const STORE_KEY = "muhasebecin_local_v1";
 
 const $ = (id) => document.getElementById(id);
+
+let store = loadStore();
+let chartInstance = null;
+
+function createEmptyStore() {
+  return {
+    debts: [],
+    incomes: [],
+    expenses: [],
+    bills: [],
+    salaries: [],
+    settings: {
+      theme: "dark",
+      notifications: false
+    }
+  };
+}
+
+function loadStore() {
+  const raw = localStorage.getItem(STORE_KEY);
+  if (!raw) return createEmptyStore();
+  try {
+    return normalizeStore(JSON.parse(raw));
+  } catch {
+    return createEmptyStore();
+  }
+}
+
+function saveStore() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(store));
+}
+
+function normalizeStore(data) {
+  const base = createEmptyStore();
+  if (!data || typeof data !== "object") return base;
+  return {
+    debts: Array.isArray(data.debts) ? data.debts : [],
+    incomes: Array.isArray(data.incomes) ? data.incomes : [],
+    expenses: Array.isArray(data.expenses) ? data.expenses : [],
+    bills: Array.isArray(data.bills) ? data.bills : [],
+    salaries: Array.isArray(data.salaries) ? data.salaries : [],
+    settings: { ...base.settings, ...(data.settings || {}) }
+  };
+}
+
+function id() {
+  return "id_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+}
 
 function tl(v) {
   return Number(v || 0).toLocaleString("tr-TR");
 }
 
-function showApp() {
-  $("authOverlay").classList.add("hidden");
-  $("appRoot").classList.remove("hidden");
+function nowDate() {
+  return new Date().toISOString().slice(0, 10);
 }
 
-function showAuth() {
-  $("authOverlay").classList.remove("hidden");
-  $("appRoot").classList.add("hidden");
+function monthYearMatch(dateStr) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
 }
 
-async function persistStore() {
-  saveLocalStore(store);
-  if (currentUser) {
-    await saveCloudStore(currentUser.uid, store);
-  }
+function yearMatch(dateStr) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear();
 }
 
-function setAuthMode(mode) {
-  authMode = mode;
-  $("loginTabBtn").classList.toggle("active", mode === "login");
-  $("registerTabBtn").classList.toggle("active", mode === "register");
-  $("registerFields").classList.toggle("hidden", mode !== "register");
-  $("authEmail").classList.toggle("hidden", mode !== "register");
-  $("authLoginValue").classList.toggle("hidden", mode === "register");
-  $("authSubmitBtn").textContent = mode === "register" ? "Kayıt Ol" : "Giriş Yap";
-  $("authMessage").textContent = "";
+function computeSummary() {
+  let owedToMe = 0;
+  let iOwe = 0;
+  let monthIncome = 0;
+  let monthExpense = 0;
+  let yearIncome = 0;
+  let yearExpense = 0;
+
+  store.debts.forEach((item) => {
+    if (item.relation === "they_owe_me") owedToMe += Number(item.amount || 0);
+    else iOwe += Number(item.amount || 0);
+  });
+
+  store.incomes.forEach((item) => {
+    const amount = Number(item.amount || 0);
+    if (monthYearMatch(item.date)) monthIncome += amount;
+    if (yearMatch(item.date)) yearIncome += amount;
+  });
+
+  store.expenses.forEach((item) => {
+    const amount = Number(item.amount || 0);
+    if (monthYearMatch(item.date)) monthExpense += amount;
+    if (yearMatch(item.date)) yearExpense += amount;
+  });
+
+  store.bills.forEach((item) => {
+    const amount = Number(item.amount || 0);
+    if (monthYearMatch(item.dueDate)) monthExpense += amount;
+    if (yearMatch(item.dueDate)) yearExpense += amount;
+  });
+
+  store.salaries.forEach((item) => {
+    const amount = Number(item.amount || 0);
+    if (monthYearMatch(item.date)) monthExpense += amount;
+    if (yearMatch(item.date)) yearExpense += amount;
+  });
+
+  return {
+    owedToMe,
+    iOwe,
+    monthIncome,
+    monthExpense,
+    yearIncome,
+    yearExpense,
+    net: (monthIncome + owedToMe) - (monthExpense + iOwe)
+  };
 }
 
-async function handleAuthSubmit() {
-  try {
-    if (authMode === "register") {
-      const username = $("registerUsername").value.trim();
-      const email = $("authEmail").value.trim();
-      const password = $("authPassword").value.trim();
+function getNotifications() {
+  const items = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-      if (!username || !email || !password) {
-        $("authMessage").textContent = "Tüm alanları doldur.";
-        return;
-      }
-
-      await registerUser(username, email, password);
-      $("authMessage").textContent = "Kayıt başarılı.";
-    } else {
-      const loginValue = $("authLoginValue").value.trim();
-      const password = $("authPassword").value.trim();
-
-      if (!loginValue || !password) {
-        $("authMessage").textContent = "Bilgileri doldur.";
-        return;
-      }
-
-      await loginUser(loginValue, password);
-      $("authMessage").textContent = "Giriş başarılı.";
+  store.bills.forEach((item) => {
+    if (!item.dueDate || item.paid) return;
+    const d = new Date(item.dueDate);
+    d.setHours(0, 0, 0, 0);
+    const diff = Math.round((d - today) / (1000 * 60 * 60 * 24));
+    if (diff <= 3) {
+      items.push({
+        text: `${item.title} faturası ${diff < 0 ? Math.abs(diff) + " gün gecikti" : diff === 0 ? "bugün son gün" : diff + " gün kaldı"}`
+      });
     }
-  } catch (e) {
-    $("authMessage").textContent = e.message || "Bir hata oluştu.";
-  }
-}
+  });
 
-function applyTheme() {
-  document.body.classList.toggle("light", store.settings.theme === "light");
-}
+  store.salaries.forEach((item) => {
+    if (!item.date || item.paid) return;
+    const d = new Date(item.date);
+    d.setHours(0, 0, 0, 0);
+    const diff = Math.round((d - today) / (1000 * 60 * 60 * 24));
+    if (diff <= 3) {
+      items.push({
+        text: `${item.name} maaşı ${diff < 0 ? Math.abs(diff) + " gün gecikti" : diff === 0 ? "bugün ödenecek" : diff + " gün kaldı"}`
+      });
+    }
+  });
 
-function renderSummary() {
-  const s = computeSummary(store);
-  $("netTotal").textContent = tl(s.net);
-  $("monthIncome").textContent = tl(s.monthIncome);
-  $("monthExpense").textContent = tl(s.monthExpense);
-  $("owedToMeTotal").textContent = tl(s.owedToMe);
-  $("iOweTotal").textContent = tl(s.iOwe);
-  $("summaryMini").textContent = "Aylık ve yıllık veriler otomatik hesaplanır";
-}
-
-function renderNotifications() {
-  const list = getNotifications(store);
-
-  if (!list.length) {
-    $("notificationList").innerHTML = `<div class="empty-state">Bildirim yok.</div>`;
-    $("notificationBadge").classList.add("hidden");
-    return;
-  }
-
-  $("notificationBadge").textContent = list.length;
-  $("notificationBadge").classList.remove("hidden");
-
-  $("notificationList").innerHTML = list
-    .map((item) => `<div class="notification-item">${item.text}</div>`)
-    .join("");
+  return items;
 }
 
 function cardHtml(title, badge, meta, actions, letter = "K") {
@@ -150,6 +170,31 @@ function cardHtml(title, badge, meta, actions, letter = "K") {
   `;
 }
 
+function renderSummary() {
+  const s = computeSummary();
+  $("netTotal").textContent = tl(s.net);
+  $("monthIncome").textContent = tl(s.monthIncome);
+  $("monthExpense").textContent = tl(s.monthExpense);
+  $("owedToMeTotal").textContent = tl(s.owedToMe);
+  $("iOweTotal").textContent = tl(s.iOwe);
+  $("summaryMini").textContent = "Veriler bu cihazda saklanıyor";
+}
+
+function renderNotifications() {
+  const list = getNotifications();
+  if (!list.length) {
+    $("notificationList").innerHTML = `<div class="empty-state">Bildirim yok.</div>`;
+    $("notificationBadge").classList.add("hidden");
+    return;
+  }
+
+  $("notificationBadge").textContent = list.length;
+  $("notificationBadge").classList.remove("hidden");
+  $("notificationList").innerHTML = list
+    .map((item) => `<div class="notification-item">${item.text}</div>`)
+    .join("");
+}
+
 function renderDebts() {
   const q = $("searchInput").value.trim().toLowerCase();
   const items = store.debts.filter((x) => x.name.toLowerCase().includes(q));
@@ -165,10 +210,7 @@ function renderDebts() {
       : `<div class="record-badge badge-negative">Ben borçluyum — ₺ ${tl(item.amount)}</div>`;
 
     const meta = `${item.dueDate ? "Vade: " + item.dueDate + " • " : ""}${item.note || "Not yok"}`;
-
-    const actions = `
-      <button class="action-btn danger" data-type="debt" data-id="${item.id}" data-action="delete">Sil</button>
-    `;
+    const actions = `<button class="action-btn danger" data-type="debt" data-id="${item.id}" data-action="delete">Sil</button>`;
 
     return cardHtml(item.name, badge, meta, actions, item.name.charAt(0).toUpperCase());
   }).join("");
@@ -223,12 +265,10 @@ function renderBills() {
       : `<div class="record-badge badge-negative">Bekliyor — ₺ ${tl(item.amount)}</div>`;
 
     const meta = `${item.dueDate || ""} • ${item.category || "Kategori yok"} • ${item.note || "Not yok"}`;
-
     const actions = `
       <button class="action-btn primary" data-type="bill" data-id="${item.id}" data-action="toggle">${item.paid ? "Bekliyor Yap" : "Ödendi Yap"}</button>
       <button class="action-btn danger" data-type="bill" data-id="${item.id}" data-action="delete">Sil</button>
     `;
-
     return cardHtml(item.title, badge, meta, actions, "F");
   }).join("");
 }
@@ -248,18 +288,16 @@ function renderSalaries() {
       : `<div class="record-badge badge-negative">Bekliyor — ₺ ${tl(item.amount)}</div>`;
 
     const meta = `${item.date || ""} • ${item.role || "Pozisyon yok"} • ${item.note || "Not yok"}`;
-
     const actions = `
       <button class="action-btn primary" data-type="salary" data-id="${item.id}" data-action="toggle">${item.paid ? "Bekliyor Yap" : "Ödendi Yap"}</button>
       <button class="action-btn danger" data-type="salary" data-id="${item.id}" data-action="delete">Sil</button>
     `;
-
     return cardHtml(item.name, badge, meta, actions, item.name.charAt(0).toUpperCase());
   }).join("");
 }
 
 function renderReports() {
-  const s = computeSummary(store);
+  const s = computeSummary();
 
   $("reportSummary").innerHTML = `
     <div class="report-line"><span>Bu Ay Gelir</span><strong>₺ ${tl(s.monthIncome)}</strong></div>
@@ -271,10 +309,9 @@ function renderReports() {
     <div class="report-line"><span>Net Durum</span><strong>₺ ${tl(s.net)}</strong></div>
   `;
 
-  const ctx = $("financeChart");
   if (chartInstance) chartInstance.destroy();
 
-  chartInstance = new Chart(ctx, {
+  chartInstance = new Chart($("financeChart"), {
     type: "bar",
     data: {
       labels: ["Aylık Gelir", "Aylık Gider", "Yıllık Gelir", "Yıllık Gider"],
@@ -306,7 +343,7 @@ function renderReports() {
 }
 
 function renderAll() {
-  applyTheme();
+  document.body.classList.toggle("light", store.settings.theme === "light");
   renderSummary();
   renderNotifications();
   renderDebts();
@@ -315,23 +352,7 @@ function renderAll() {
   renderBills();
   renderSalaries();
   renderReports();
-
-  if (currentProfile?.username) {
-    $("avatarCircle").textContent = currentProfile.username.charAt(0).toUpperCase();
-  } else if (currentUser?.email) {
-    $("avatarCircle").textContent = currentUser.email.charAt(0).toUpperCase();
-  }
-
   if (typeof lucide !== "undefined") lucide.createIcons();
-}
-
-async function initUser(user) {
-  currentUser = user;
-  currentProfile = await loadProfile(user.uid);
-  store = normalizeStore(await loadCloudStore(user.uid));
-  saveLocalStore(store);
-  showApp();
-  renderAll();
 }
 
 function switchTab(tab) {
@@ -389,7 +410,7 @@ function clearSalaryForm() {
   $("salaryNoteInput").value = "";
 }
 
-async function addDebtHandler() {
+function addDebtHandler() {
   const name = $("personNameInput").value.trim();
   const amount = Number($("debtAmountInput").value || 0);
 
@@ -398,7 +419,8 @@ async function addDebtHandler() {
     return;
   }
 
-  store = addDebt(store, {
+  store.debts.unshift({
+    id: id(),
     name,
     amount,
     relation: $("relationSelect").value,
@@ -406,12 +428,12 @@ async function addDebtHandler() {
     note: $("debtNoteInput").value.trim()
   });
 
-  await persistStore();
+  saveStore();
   clearDebtForm();
   renderAll();
 }
 
-async function addIncomeHandler() {
+function addIncomeHandler() {
   const title = $("incomeTitleInput").value.trim();
   const amount = Number($("incomeAmountInput").value || 0);
 
@@ -420,20 +442,21 @@ async function addIncomeHandler() {
     return;
   }
 
-  store = addIncome(store, {
+  store.incomes.unshift({
+    id: id(),
     title,
     amount,
-    date: $("incomeDateInput").value,
+    date: $("incomeDateInput").value || nowDate(),
     category: $("incomeCategoryInput").value.trim(),
     note: $("incomeNoteInput").value.trim()
   });
 
-  await persistStore();
+  saveStore();
   clearIncomeForm();
   renderAll();
 }
 
-async function addExpenseHandler() {
+function addExpenseHandler() {
   const title = $("expenseTitleInput").value.trim();
   const amount = Number($("expenseAmountInput").value || 0);
 
@@ -442,20 +465,21 @@ async function addExpenseHandler() {
     return;
   }
 
-  store = addExpense(store, {
+  store.expenses.unshift({
+    id: id(),
     title,
     amount,
-    date: $("expenseDateInput").value,
+    date: $("expenseDateInput").value || nowDate(),
     category: $("expenseCategoryInput").value.trim(),
     note: $("expenseNoteInput").value.trim()
   });
 
-  await persistStore();
+  saveStore();
   clearExpenseForm();
   renderAll();
 }
 
-async function addBillHandler() {
+function addBillHandler() {
   const title = $("billTitleInput").value.trim();
   const amount = Number($("billAmountInput").value || 0);
 
@@ -464,20 +488,22 @@ async function addBillHandler() {
     return;
   }
 
-  store = addBill(store, {
+  store.bills.unshift({
+    id: id(),
     title,
     amount,
-    dueDate: $("billDueDateInput").value,
+    dueDate: $("billDueDateInput").value || nowDate(),
     category: $("billCategoryInput").value.trim(),
-    note: $("billNoteInput").value.trim()
+    note: $("billNoteInput").value.trim(),
+    paid: false
   });
 
-  await persistStore();
+  saveStore();
   clearBillForm();
   renderAll();
 }
 
-async function addSalaryHandler() {
+function addSalaryHandler() {
   const name = $("salaryNameInput").value.trim();
   const amount = Number($("salaryAmountInput").value || 0);
 
@@ -486,36 +512,52 @@ async function addSalaryHandler() {
     return;
   }
 
-  store = addSalary(store, {
+  store.salaries.unshift({
+    id: id(),
     name,
     amount,
-    date: $("salaryDateInput").value,
+    date: $("salaryDateInput").value || nowDate(),
     role: $("salaryRoleInput").value.trim(),
-    note: $("salaryNoteInput").value.trim()
+    note: $("salaryNoteInput").value.trim(),
+    paid: false
   });
 
-  await persistStore();
+  saveStore();
   clearSalaryForm();
   renderAll();
 }
 
-async function handleRecordActions(e) {
+function handleRecordActions(e) {
   const btn = e.target.closest("[data-action]");
   if (!btn) return;
 
   const type = btn.dataset.type;
   const action = btn.dataset.action;
-  const id = btn.dataset.id;
+  const itemId = btn.dataset.id;
 
-  if (type === "debt" && action === "delete") store = deleteDebt(store, id);
-  if (type === "income" && action === "delete") store = deleteIncome(store, id);
-  if (type === "expense" && action === "delete") store = deleteExpense(store, id);
-  if (type === "bill" && action === "delete") store = deleteBill(store, id);
-  if (type === "salary" && action === "delete") store = deleteSalary(store, id);
-  if (type === "bill" && action === "toggle") store = toggleBillPaid(store, id);
-  if (type === "salary" && action === "toggle") store = toggleSalaryPaid(store, id);
+  if (type === "debt" && action === "delete") {
+    store.debts = store.debts.filter((x) => x.id !== itemId);
+  }
+  if (type === "income" && action === "delete") {
+    store.incomes = store.incomes.filter((x) => x.id !== itemId);
+  }
+  if (type === "expense" && action === "delete") {
+    store.expenses = store.expenses.filter((x) => x.id !== itemId);
+  }
+  if (type === "bill" && action === "delete") {
+    store.bills = store.bills.filter((x) => x.id !== itemId);
+  }
+  if (type === "salary" && action === "delete") {
+    store.salaries = store.salaries.filter((x) => x.id !== itemId);
+  }
+  if (type === "bill" && action === "toggle") {
+    store.bills = store.bills.map((x) => x.id === itemId ? { ...x, paid: !x.paid } : x);
+  }
+  if (type === "salary" && action === "toggle") {
+    store.salaries = store.salaries.map((x) => x.id === itemId ? { ...x, paid: !x.paid } : x);
+  }
 
-  await persistStore();
+  saveStore();
   renderAll();
 }
 
@@ -527,7 +569,7 @@ async function requestNotificationPermission() {
 
   const permission = await Notification.requestPermission();
   store.settings.notifications = permission === "granted";
-  await persistStore();
+  saveStore();
   alert(permission === "granted" ? "Bildirim izni verildi." : "Bildirim izni verilmedi.");
 }
 
@@ -536,20 +578,17 @@ function testNotification() {
     alert("Önce bildirim izni ver.");
     return;
   }
-
-  new Notification("Muhasebecin", {
-    body: "Test bildirimi çalışıyor."
-  });
+  new Notification("Muhasebecin", { body: "Test bildirimi çalışıyor." });
 }
 
-async function toggleThemeHandler() {
+function toggleThemeHandler() {
   store.settings.theme = store.settings.theme === "light" ? "dark" : "light";
-  await persistStore();
+  saveStore();
   renderAll();
 }
 
 function downloadJson() {
-  const blob = new Blob([exportJson(store)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(store, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -558,18 +597,28 @@ function downloadJson() {
   URL.revokeObjectURL(url);
 }
 
-async function importJsonHandler(file) {
+function importJsonHandler(file) {
   if (!file) return;
-  const text = await file.text();
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      store = normalizeStore(JSON.parse(reader.result));
+      saveStore();
+      renderAll();
+      alert("Yedek yüklendi.");
+    } catch {
+      alert("Geçersiz JSON dosyası.");
+    }
+  };
+  reader.readAsText(file);
+}
 
-  try {
-    store = normalizeStore(JSON.parse(text));
-    await persistStore();
-    renderAll();
-    alert("Yedek yüklendi.");
-  } catch {
-    alert("Geçersiz JSON dosyası.");
-  }
+function resetAllData() {
+  const ok = confirm("Tüm veriler silinsin mi?");
+  if (!ok) return;
+  store = createEmptyStore();
+  saveStore();
+  renderAll();
 }
 
 function startVoice() {
@@ -586,7 +635,7 @@ function startVoice() {
 
   rec.onstart = () => alert("Dinliyorum...");
   rec.onerror = (e) => alert("Sesli komut hatası: " + e.error);
-  rec.onresult = async (e) => {
+  rec.onresult = (e) => {
     const text = e.results[0][0].transcript.toLowerCase();
     const amountMatch = text.match(/\d+/);
 
@@ -611,7 +660,8 @@ function startVoice() {
 
     const relation = text.includes("ben borçluyum") ? "i_owe_them" : "they_owe_me";
 
-    store = addDebt(store, {
+    store.debts.unshift({
+      id: id(),
       name: name.charAt(0).toUpperCase() + name.slice(1),
       amount,
       relation,
@@ -619,41 +669,6 @@ function startVoice() {
       note: "Sesli komut ile eklendi"
     });
 
-    await persistStore();
+    saveStore();
     renderAll();
-    alert("Sesli komut işlendi.");
-  };
-
-  rec.start();
-}
-
-function setupEvents() {
-  $("loginTabBtn").addEventListener("click", () => setAuthMode("login"));
-  $("registerTabBtn").addEventListener("click", () => setAuthMode("register"));
-  $("authSubmitBtn").addEventListener("click", handleAuthSubmit);
-
-  $("addDebtBtn").addEventListener("click", addDebtHandler);
-  $("clearDebtFormBtn").addEventListener("click", clearDebtForm);
-
-  $("addIncomeBtn").addEventListener("click", addIncomeHandler);
-  $("clearIncomeFormBtn").addEventListener("click", clearIncomeForm);
-
-  $("addExpenseBtn").addEventListener("click", addExpenseHandler);
-  $("clearExpenseFormBtn").addEventListener("click", clearExpenseForm);
-
-  $("addBillBtn").addEventListener("click", addBillHandler);
-  $("clearBillFormBtn").addEventListener("click", clearBillForm);
-
-  $("addSalaryBtn").addEventListener("click", addSalaryHandler);
-  $("clearSalaryFormBtn").addEventListener("click", clearSalaryForm);
-
-  $("searchInput").addEventListener("input", renderAll);
-
-  $("debtsList").addEventListener("click", handleRecordActions);
-  $("incomeList").addEventListener("click", handleRecordActions);
-  $("expenseList").addEventListener("click", handleRecordActions);
-  $("billList").addEventListener("click", handleRecordActions);
-  $("salaryList").addEventListener("click", handleRecordActions);
-
-  document.querySelectorAll(".nav-item").forEach((btn) => {
-    btn.addEventListener("click", () => switchTab(btn.data
+    alert(
