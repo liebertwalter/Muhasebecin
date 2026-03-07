@@ -312,6 +312,9 @@ body{
   gap:10px;
   justify-content:flex-start;
 }
+.settings-btn.danger{
+  background:rgba(255,90,103,.16);
+}
 
 .bottom-nav{
   position:fixed;
@@ -398,4 +401,4 @@ button svg,
   .voice-card-btn{width:100%;justify-content:center}
   .main-title{font-size:28px}
   .summary-price{font-size:30px}
-                        }
+}
