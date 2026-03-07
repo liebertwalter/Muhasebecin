@@ -1,137 +1,111 @@
-/* VERİTABANI MOTORU */
-
 let DB_KEY = "muhasebecin_db";
 
-function dbYukle(){
-let veri = localStorage.getItem(DB_KEY);
-if(!veri) return [];
-return JSON.parse(veri);
+function dbYukle() {
+  let veri = localStorage.getItem(DB_KEY);
+  if (!veri) return [];
+  return JSON.parse(veri);
 }
 
-function dbKaydet(data){
-localStorage.setItem(DB_KEY, JSON.stringify(data));
+async function dbKaydet(data) {
+  localStorage.setItem(DB_KEY, JSON.stringify(data));
+
+  if (window.firebaseCloud && window.firebaseCloud.currentUser) {
+    await window.firebaseCloud.saveCloudData(window.firebaseCloud.currentUser.uid, data);
+  }
 }
 
-/* TÜM KİŞİLER */
-
-function tumKisiler(){
-return dbYukle();
+function tumKisiler() {
+  return dbYukle();
 }
 
-/* KİŞİ BUL */
+function kisiBul(isim) {
+  let kisiler = dbYukle();
 
-function kisiBul(isim){
-
-let kisiler = dbYukle();
-
-return kisiler.find(k =>
-k.isim.toLowerCase() === isim.toLowerCase()
-);
-
+  return kisiler.find(
+    k => k.isim.toLowerCase() === isim.toLowerCase()
+  );
 }
 
-/* KİŞİ EKLE */
+async function kisiEkle(isim) {
+  let kisiler = dbYukle();
 
-function kisiEkle(isim){
+  let yeni = {
+    isim: isim,
+    bakiye: 0,
+    hareketler: []
+  };
 
-let kisiler = dbYukle();
+  kisiler.push(yeni);
 
-let yeni = {
-isim: isim,
-bakiye: 0,
-hareketler: []
-};
-
-kisiler.push(yeni);
-
-dbKaydet(kisiler);
-
+  await dbKaydet(kisiler);
 }
 
-/* BORÇ EKLE */
+async function borcEkleDB(isim, tutar) {
+  let kisiler = dbYukle();
 
-function borcEkleDB(isim, tutar){
+  let kisi = kisiler.find(
+    k => k.isim.toLowerCase() === isim.toLowerCase()
+  );
 
-let kisiler = dbYukle();
+  if (!kisi) {
+    kisi = {
+      isim: isim,
+      bakiye: 0,
+      hareketler: []
+    };
 
-let kisi = kisiler.find(k =>
-k.isim.toLowerCase() === isim.toLowerCase()
-);
+    kisiler.push(kisi);
+  }
 
-if(!kisi){
+  kisi.bakiye += tutar;
 
-kisi = {
-isim: isim,
-bakiye:0,
-hareketler:[]
-};
+  kisi.hareketler.push({
+    tip: "ekle",
+    tutar: tutar,
+    tarih: new Date().toLocaleString()
+  });
 
-kisiler.push(kisi);
-
+  await dbKaydet(kisiler);
 }
 
-kisi.bakiye += tutar;
+async function borcDusDB(isim, tutar) {
+  let kisiler = dbYukle();
 
-kisi.hareketler.push({
-tip:"ekle",
-tutar:tutar,
-tarih:new Date().toLocaleString()
-});
+  let kisi = kisiler.find(
+    k => k.isim.toLowerCase() === isim.toLowerCase()
+  );
 
-dbKaydet(kisiler);
+  if (!kisi) return;
 
+  kisi.bakiye -= tutar;
+
+  kisi.hareketler.push({
+    tip: "dus",
+    tutar: tutar,
+    tarih: new Date().toLocaleString()
+  });
+
+  await dbKaydet(kisiler);
 }
 
-/* BORÇ DÜŞ */
+async function kisiSilDB(isim) {
+  let kisiler = dbYukle();
 
-function borcDusDB(isim, tutar){
+  kisiler = kisiler.filter(
+    k => k.isim.toLowerCase() !== isim.toLowerCase()
+  );
 
-let kisiler = dbYukle();
-
-let kisi = kisiler.find(k =>
-k.isim.toLowerCase() === isim.toLowerCase()
-);
-
-if(!kisi) return;
-
-kisi.bakiye -= tutar;
-
-kisi.hareketler.push({
-tip:"dus",
-tutar:tutar,
-tarih:new Date().toLocaleString()
-});
-
-dbKaydet(kisiler);
-
+  await dbKaydet(kisiler);
 }
 
-/* KİŞİ SİL */
+function toplamBorc() {
+  let kisiler = dbYukle();
 
-function kisiSilDB(isim){
+  let toplam = 0;
 
-let kisiler = dbYukle();
+  kisiler.forEach(k => {
+    toplam += k.bakiye;
+  });
 
-kisiler = kisiler.filter(k =>
-k.isim.toLowerCase() !== isim.toLowerCase()
-);
-
-dbKaydet(kisiler);
-
-}
-
-/* TOPLAM BORÇ */
-
-function toplamBorc(){
-
-let kisiler = dbYukle();
-
-let toplam = 0;
-
-kisiler.forEach(k=>{
-toplam += k.bakiye;
-});
-
-return toplam;
-
+  return toplam;
 }
