@@ -1,153 +1,143 @@
-/* ANA UYGULAMA KONTROLÜ */
+function listeyiGuncelle() {
+  const liste = document.getElementById("liste");
+  if (!liste) return;
 
-function listeyiGuncelle(){
+  liste.innerHTML = "";
 
-let liste = document.getElementById("liste");
+  const kisiler = tumKisiler();
+  const aramaInput = document.getElementById("arama");
+  const arama = aramaInput ? aramaInput.value.toLowerCase().trim() : "";
 
-if(!liste) return;
+  kisiler.forEach((kisi) => {
+    if (!kisi.isim.toLowerCase().includes(arama)) return;
 
-liste.innerHTML="";
+    const kart = document.createElement("div");
+    kart.className = "card";
 
-let kisiler = tumKisiler();
+    let hareketHTML = `<div class="hareket-list">`;
 
-let aramaInput = document.getElementById("arama");
+    if (kisi.hareketler && kisi.hareketler.length > 0) {
+      kisi.hareketler
+        .slice()
+        .reverse()
+        .forEach((h) => {
+          hareketHTML += `
+            <div class="hareket">
+              ${h.tip === "ekle" ? "➕" : "➖"} ${h.tutar} TL — ${h.tarih}
+            </div>
+          `;
+        });
+    } else {
+      hareketHTML += `<div class="hareket">Henüz işlem yok.</div>`;
+    }
 
-let arama = "";
+    hareketHTML += `</div>`;
 
-if(aramaInput){
-arama = aramaInput.value.toLowerCase();
+    kart.innerHTML = `
+      <div class="person-head">
+        <div>
+          <div class="person-name">${kisi.isim}</div>
+          <div class="person-balance">Borç: ${kisi.bakiye} TL</div>
+        </div>
+        <i data-lucide="badge-dollar-sign"></i>
+      </div>
+
+      <div class="person-actions">
+        <button class="btn-ekle" onclick="borcEkleUI('${escapeTekTirnak(kisi.isim)}')">
+          <i data-lucide="plus"></i>
+          <span>Borç Ekle</span>
+        </button>
+
+        <button class="btn-dus" onclick="borcDusUI('${escapeTekTirnak(kisi.isim)}')">
+          <i data-lucide="minus"></i>
+          <span>Borç Düş</span>
+        </button>
+
+        <button class="btn-sil" onclick="kisiSilUI('${escapeTekTirnak(kisi.isim)}')">
+          <i data-lucide="trash-2"></i>
+          <span>Sil</span>
+        </button>
+      </div>
+
+      ${hareketHTML}
+    `;
+
+    liste.appendChild(kart);
+  });
+
+  toplamGuncelle();
+
+  if (typeof lucide !== "undefined") {
+    lucide.createIcons();
+  }
+
+  if (typeof grafikCiz === "function") {
+    grafikCiz();
+  }
 }
 
-kisiler.forEach(kisi=>{
+function borcEkleUI(isim) {
+  let tutar = prompt(isim + " için eklenecek tutar:");
+  if (!tutar) return;
 
-if(!kisi.isim.toLowerCase().includes(arama)) return;
+  tutar = Number(tutar);
+  if (!tutar || tutar <= 0) return;
 
-let kart = document.createElement("div");
-kart.className="card";
-
-let hareketHTML="";
-
-kisi.hareketler.slice().reverse().forEach(h=>{
-
-hareketHTML += `
-
-<div class="hareket">
-${h.tip=="ekle" ? "+" : "-"} ${h.tutar} TL
-(${h.tarih})
-</div>
-`;});
-
-kart.innerHTML = `
-<b>${kisi.isim}</b><br>
-Borç: ${kisi.bakiye} TL
-
-<br><br>
-
-<button class="btn-ekle" onclick="borcEkleUI('${kisi.isim}')">+ Borç</button>
-<button class="btn-dus" onclick="borcDusUI('${kisi.isim}')">- Borç</button>
-<button class="btn-sil" onclick="kisiSilUI('${kisi.isim}')">Sil</button>
-
-<br><br>
-
-${hareketHTML}
-`;
-
-liste.appendChild(kart);
-
-});
-
-toplamGuncelle();
-
+  borcEkleDB(isim, tutar);
+  listeyiGuncelle();
 }
 
-/* BORÇ EKLE */
+function borcDusUI(isim) {
+  let tutar = prompt(isim + " için düşülecek tutar:");
+  if (!tutar) return;
 
-function borcEkleUI(isim){
+  tutar = Number(tutar);
+  if (!tutar || tutar <= 0) return;
 
-let tutar = prompt(isim + " için eklenecek tutar:");
-
-if(!tutar) return;
-
-tutar = Number(tutar);
-
-if(!tutar) return;
-
-borcEkleDB(isim, tutar);
-
-listeyiGuncelle();
-
+  borcDusDB(isim, tutar);
+  listeyiGuncelle();
 }
 
-/* BORÇ DÜŞ */
+function kisiSilUI(isim) {
+  const onay = confirm(isim + " silinsin mi?");
+  if (!onay) return;
 
-function borcDusUI(isim){
-
-let tutar = prompt(isim + " için düşülecek tutar:");
-
-if(!tutar) return;
-
-tutar = Number(tutar);
-
-if(!tutar) return;
-
-borcDusDB(isim, tutar);
-
-listeyiGuncelle();
-
+  kisiSilDB(isim);
+  listeyiGuncelle();
 }
 
-/* KİŞİ SİL */
+function yeniKisi() {
+  const isimInput = document.getElementById("isim");
+  let isim = isimInput.value.trim();
 
-function kisiSilUI(isim){
+  if (!isim) return;
 
-let onay = confirm(isim + " silinsin mi?");
+  const mevcut = kisiBul(isim);
+  if (mevcut) {
+    alert("Bu kişi zaten var.");
+    return;
+  }
 
-if(!onay) return;
-
-kisiSilDB(isim);
-
-listeyiGuncelle();
-
+  kisiEkle(isim);
+  isimInput.value = "";
+  listeyiGuncelle();
 }
 
-/* YENİ KİŞİ EKLE */
+function toplamGuncelle() {
+  const toplamEl = document.getElementById("toplam");
+  if (!toplamEl) return;
 
-function yeniKisi(){
-
-let isim = document.getElementById("isim").value;
-
-if(!isim) return;
-
-kisiEkle(isim);
-
-document.getElementById("isim").value="";
-
-listeyiGuncelle();
-
+  toplamEl.innerText = toplamBorc().toLocaleString("tr-TR");
 }
 
-/* TOPLAM BORÇ */
-
-function toplamGuncelle(){
-
-let toplamEl = document.getElementById("toplam");
-
-if(!toplamEl) return;
-
-toplamEl.innerText = toplamBorc();
-
+function aramaYap() {
+  listeyiGuncelle();
 }
 
-/* ARAMA */
-
-function aramaYap(){
-listeyiGuncelle();
+function escapeTekTirnak(metin) {
+  return String(metin).replace(/'/g, "\\'");
 }
 
-/* SAYFA YÜKLENİNCE */
-
-document.addEventListener("DOMContentLoaded", ()=>{
-
-listeyiGuncelle();
-
+document.addEventListener("DOMContentLoaded", () => {
+  listeyiGuncelle();
 });
