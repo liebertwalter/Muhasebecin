@@ -1485,8 +1485,377 @@
         }
       }
 
-      setupEvents();
-      renderAll();
+      const firebaseConfig = {
+  apiKey: "AIzaSyCQfe0kFo_2owofpOMmNdTqNwLxxsSvSKU",
+  authDomain: "muhasebecinizz.firebaseapp.com",
+  projectId: "muhasebecinizz",
+  storageBucket: "muhasebecinizz.firebasestorage.app",
+  messagingSenderId: "717751925179",
+  appId: "1:717751925179:web:6b927078475e11fce96c9e",
+  measurementId: "G-94R335GH2Y"
+};
+
+const ADMIN_EMAIL = "ahmetbalkan009@gmail.com";
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
+const fbAuth = firebase.auth();
+const fbDb = firebase.firestore();
+
+let currentFirebaseUser = null;
+let adminBroadcasts = [];
+let adminPanelReady = false;
+
+const originalSaveStore = saveStore;
+saveStore = function () {
+  originalSaveStore();
+
+  if (currentFirebaseUser) {
+    fbDb
+      .collection("users")
+      .doc(currentFirebaseUser.uid)
+      .collection("appData")
+      .doc("main")
+      .set(JSON.parse(JSON.stringify(store)), { merge: true })
+      .catch((err) => console.error("Cloud save error:", err));
+  }
+};
+
+const originalGetNotifications = getNotifications;
+getNotifications = function () {
+  const localItems = originalGetNotifications();
+  const cloudItems = adminBroadcasts.map((item) => ({
+    text: `Duyuru: ${item.title} — ${item.message}`
+  }));
+  return [...cloudItems, ...localItems];
+};
+
+function injectAuthStyles() {
+  if (document.getElementById("firebaseAuthExtraStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "firebaseAuthExtraStyles";
+  style.textContent = `
+    .firebase-auth-overlay{
+      position:fixed;
+      inset:0;
+      z-index:999999;
+      background:rgba(2,6,23,.84);
+      backdrop-filter:blur(14px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .firebase-auth-card{
+      width:min(100%,430px);
+      background:linear-gradient(180deg, rgba(72,88,152,.45), rgba(34,45,88,.45));
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:28px;
+      padding:20px;
+      color:#fff;
+      box-shadow:0 20px 60px rgba(0,0,0,.45);
+    }
+    .firebase-auth-logo{
+      width:72px;
+      height:72px;
+      margin:0 auto 12px;
+      border-radius:22px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+      font-size:32px;
+      font-weight:900;
+      color:#fff;
+    }
+    .firebase-auth-title{
+      text-align:center;
+      font-size:38px;
+      font-weight:900;
+    }
+    .firebase-auth-sub{
+      text-align:center;
+      color:#c7d2fe;
+      margin:8px 0 18px;
+      font-size:14px;
+    }
+    .firebase-auth-tabs{
+      display:flex;
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .firebase-auth-tab{
+      flex:1;
+      border:none;
+      border-radius:14px;
+      padding:12px;
+      font-size:16px;
+      font-weight:800;
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      cursor:pointer;
+    }
+    .firebase-auth-tab.active{
+      background:#2563eb;
+    }
+    .firebase-auth-msg{
+      min-height:18px;
+      margin-top:12px;
+      text-align:center;
+      font-size:13px;
+      color:#dbeafe;
+    }
+    .firebase-admin-card{
+      margin-top:14px;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function injectAuthOverlay() {
+  if (document.getElementById("firebaseAuthOverlay")) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = "firebaseAuthOverlay";
+  overlay.className = "firebase-auth-overlay";
+  overlay.innerHTML = `
+    <div class="firebase-auth-card">
+      <div class="firebase-auth-logo">M</div>
+      <div class="firebase-auth-title">Muhasebecin</div>
+      <div class="firebase-auth-sub">Firebase giriş sistemi aktif</div>
+
+      <div class="firebase-auth-tabs">
+        <button id="firebaseLoginTabBtn" class="firebase-auth-tab active" type="button">Giriş Yap</button>
+        <button id="firebaseRegisterTabBtn" class="firebase-auth-tab" type="button">Kayıt Ol</button>
+      </div>
+
+      <input id="firebaseAuthName" class="input dark hidden" placeholder="Ad Soyad" />
+      <input id="firebaseAuthEmail" class="input dark" placeholder="E-posta" />
+      <input id="firebaseAuthPassword" class="input dark" type="password" placeholder="Şifre" />
+
+      <button id="firebaseAuthSubmitBtn" class="primary-btn" type="button">Giriş Yap</button>
+      <div id="firebaseAuthMsg" class="firebase-auth-msg"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  let authMode = "login";
+
+  function setMode(mode) {
+    authMode = mode;
+    document.getElementById("firebaseLoginTabBtn").classList.toggle("active", mode === "login");
+    document.getElementById("firebaseRegisterTabBtn").classList.toggle("active", mode === "register");
+    document.getElementById("firebaseAuthName").classList.toggle("hidden", mode !== "register");
+    document.getElementById("firebaseAuthSubmitBtn").textContent = mode === "register" ? "Kayıt Ol" : "Giriş Yap";
+    document.getElementById("firebaseAuthMsg").textContent = "";
+  }
+
+  document.getElementById("firebaseLoginTabBtn").addEventListener("click", () => setMode("login"));
+  document.getElementById("firebaseRegisterTabBtn").addEventListener("click", () => setMode("register"));
+
+  document.getElementById("firebaseAuthSubmitBtn").addEventListener("click", async () => {
+    const name = document.getElementById("firebaseAuthName").value.trim();
+    const email = document.getElementById("firebaseAuthEmail").value.trim();
+    const password = document.getElementById("firebaseAuthPassword").value.trim();
+    const msg = document.getElementById("firebaseAuthMsg");
+
+    if (!email || !password) {
+      msg.textContent = "E-posta ve şifre gir.";
+      return;
+    }
+
+    try {
+      if (authMode === "register") {
+        const result = await fbAuth.createUserWithEmailAndPassword(email, password);
+
+        if (name) {
+          await result.user.updateProfile({ displayName: name });
+        }
+
+        await fbDb.collection("profiles").doc(result.user.uid).set({
+          email,
+          name: name || "",
+          role: email.toLowerCase() === ADMIN_EMAIL ? "admin" : "user",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        msg.textContent = "Kayıt başarılı.";
+      } else {
+        await fbAuth.signInWithEmailAndPassword(email, password);
+        msg.textContent = "Giriş başarılı.";
+      }
+    } catch (err) {
+      msg.textContent = err.message || "Bir hata oluştu.";
+    }
+  });
+}
+
+function showOverlay(show) {
+  const overlay = document.getElementById("firebaseAuthOverlay");
+  const appRoot = document.querySelector(".app");
+  if (!overlay || !appRoot) return;
+
+  overlay.classList.toggle("hidden", !show);
+  appRoot.classList.toggle("hidden", show);
+}
+
+async function loadCloudStoreForUser(user) {
+  const snap = await fbDb
+    .collection("users")
+    .doc(user.uid)
+    .collection("appData")
+    .doc("main")
+    .get();
+
+  if (snap.exists) {
+    store = normalizeStore(snap.data());
+  } else {
+    await fbDb
+      .collection("users")
+      .doc(user.uid)
+      .collection("appData")
+      .doc("main")
+      .set(JSON.parse(JSON.stringify(store)), { merge: true });
+  }
+}
+
+async function loadBroadcasts() {
+  const snap = await fbDb
+    .collection("broadcasts")
+    .orderBy("createdAt", "desc")
+    .limit(20)
+    .get();
+
+  adminBroadcasts = snap.docs.map((d) => ({
+    id: d.id,
+    ...d.data()
+  }));
+
+  renderNotifications();
+  renderAdminBroadcasts();
+}
+
+function renderAdminBroadcasts() {
+  const list = document.getElementById("adminBroadcastList");
+  if (!list) return;
+
+  if (!adminBroadcasts.length) {
+    list.innerHTML = `<div class="empty-state">Gönderilmiş bildirim yok.</div>`;
+    return;
+  }
+
+  list.innerHTML = adminBroadcasts.map((item) => `
+    <div class="glass-card record-card">
+      <div class="record-name">${item.title || "Duyuru"}</div>
+      <div class="record-meta">${item.message || ""}</div>
+    </div>
+  `).join("");
+}
+
+function ensureAdminPanel() {
+  if (adminPanelReady) return;
+  const settingsTab = document.getElementById("settingsTab");
+  if (!settingsTab) return;
+
+  const panel = document.createElement("section");
+  panel.className = "glass-card admin-card firebase-admin-card";
+  panel.id = "firebaseAdminPanel";
+  panel.innerHTML = `
+    <div class="section-head">Admin Paneli</div>
+    <input id="adminTitleInput" class="input dark" placeholder="Bildirim başlığı" />
+    <textarea id="adminMessageInput" class="textarea dark" placeholder="Bildirim mesajı"></textarea>
+    <button id="sendBroadcastBtn" class="primary-btn" type="button">Tüm Kullanıcılara Bildirim Gönder</button>
+    <div class="small-muted">Sadece admin hesabı bu paneli görür.</div>
+    <div id="adminBroadcastList" style="margin-top:14px;"></div>
+  `;
+
+  settingsTab.appendChild(panel);
+
+  document.getElementById("sendBroadcastBtn").addEventListener("click", async () => {
+    const title = document.getElementById("adminTitleInput").value.trim();
+    const message = document.getElementById("adminMessageInput").value.trim();
+
+    if (!title || !message) {
+      alert("Başlık ve mesaj gir.");
+      return;
+    }
+
+    await fbDb.collection("broadcasts").add({
+      title,
+      message,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: currentFirebaseUser?.email || ADMIN_EMAIL
+    });
+
+    document.getElementById("adminTitleInput").value = "";
+    document.getElementById("adminMessageInput").value = "";
+
+    await loadBroadcasts();
+    alert("Bildirim gönderildi.");
+  });
+
+  adminPanelReady = true;
+}
+
+function removeAdminPanel() {
+  const panel = document.getElementById("firebaseAdminPanel");
+  if (panel) panel.remove();
+  adminPanelReady = false;
+}
+
+function updateUserHeader(user) {
+  const avatar = document.getElementById("avatarCircle");
+  const subtitle = document.getElementById("userSubTitle");
+
+  if (avatar) {
+    avatar.textContent = (user.displayName || user.email || "M").charAt(0).toUpperCase();
+  }
+
+  if (subtitle) {
+    subtitle.textContent = `${user.email}${isAdmin ? " • Admin" : ""}`;
+  }
+}
+
+injectAuthStyles();
+injectAuthOverlay();
+setupEvents();
+renderAll();
+showOverlay(true);
+
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await fbAuth.signOut();
+  });
+}
+
+fbAuth.onAuthStateChanged(async (user) => {
+  if (user) {
+    currentFirebaseUser = user;
+    isAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL;
+
+    await loadCloudStoreForUser(user);
+    await loadBroadcasts();
+
+    updateUserHeader(user);
+
+    if (isAdmin) ensureAdminPanel();
+    else removeAdminPanel();
+
+    renderAll();
+    showOverlay(false);
+  } else {
+    currentFirebaseUser = null;
+    isAdmin = false;
+    adminBroadcasts = [];
+    removeAdminPanel();
+    renderNotifications();
+    showOverlay(true);
+  }
+});
     });
   </script>
 </body>
